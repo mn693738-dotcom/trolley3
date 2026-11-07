@@ -1,0 +1,1626 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f8f6">
+  <title>SMART TROLLEY SYSTEM | Live Dashboard</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f7f5; --surface: #fff; --surface-2: #f7faf8; --text: #192720;
+      --muted: #718078; --line: #e6ece8; --green: #17834c; --green-dark: #10683c;
+      --green-soft: #e7f5ed; --lime: #c9ef9b; --amber: #a45b08; --amber-soft: #fff3da;
+      --red: #bd3b3b; --red-soft: #fff0ef; --shadow: 0 12px 32px rgba(27, 55, 39, .07);
+      --radius: 18px;
+    }
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #111915; --surface: #1a241e; --surface-2: #202c25; --text: #eef5f0;
+      --muted: #a2b1a7; --line: #2e3b33; --green: #65cf91; --green-dark: #8ce0ae;
+      --green-soft: #203b2c; --lime: #c9ef9b; --amber: #f3bb64; --amber-soft: #3e301e;
+      --red: #ff8983; --red-soft: #3e2524; --shadow: 0 12px 32px rgba(0,0,0,.2);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 14px; line-height: 1.5; transition: background .2s, color .2s; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .topbar { position: sticky; z-index: 20; top: 0; border-bottom: 1px solid color-mix(in srgb, var(--line) 75%, transparent); background: color-mix(in srgb, var(--surface) 83%, transparent); backdrop-filter: blur(18px); }
+    .topbar-inner { width: min(1190px, calc(100% - 36px)); height: 76px; margin: auto; display: flex; align-items: center; gap: 14px; }
+    .brand-mark { width: 43px; height: 43px; display: grid; place-items: center; flex: 0 0 auto; border: 0; border-radius: 14px; color: white; background: linear-gradient(145deg, #24a761, #11643a); box-shadow: 0 8px 18px #13814832; animation: float 3s ease-in-out infinite; }
+    .brand-mark svg { width: 25px; height: 25px; }
+    .brand-copy { min-width: 0; }
+    .brand-title { font-weight: 800; font-size: 15px; letter-spacing: .035em; cursor: default; }
+    .brand-subtitle { color: var(--muted); font-size: 11px; }
+    .topnav { margin-left: auto; display: flex; align-items: center; gap: 7px; }
+    .nav-tab { padding: 9px 14px; color: var(--green); font-weight: 700; border: 0; border-radius: 10px; background: var(--green-soft); }
+    .icon-button, .button { border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 11px; padding: 9px 13px; font-weight: 650; transition: transform .16s, background .16s, border-color .16s; }
+    .icon-button { width: 40px; height: 40px; display: grid; place-items: center; padding: 0; font-size: 17px; }
+    .button:hover, .icon-button:hover { transform: translateY(-1px); border-color: #9dc9ac; }
+    .button.primary { color: #fff; background: var(--green); border-color: var(--green); }
+    .button.primary:hover { background: var(--green-dark); }
+    .button.soft { color: var(--green); border-color: transparent; background: var(--green-soft); }
+    .button.danger { color: var(--red); }
+    .button.small { padding: 6px 9px; font-size: 12px; border-radius: 9px; }
+    .button:disabled { opacity: .48; cursor: not-allowed; transform: none; }
+    main { width: min(1190px, calc(100% - 36px)); margin: 26px auto 60px; }
+    .page { display: none; }
+    .page.active { display: block; animation: page-in .24s ease both; }
+    .hero { min-height: 213px; padding: 28px 34px; display: flex; align-items: center; justify-content: space-between; gap: 24px; overflow: hidden; border-radius: 24px; color: white; background: radial-gradient(ellipse at 80% 10%, #ffffff2a, transparent 33%), linear-gradient(115deg, #12683e 0%, #19864d 56%, #40aa60 100%); box-shadow: 0 16px 34px #16794326; }
+    .hero-copy { max-width: 620px; }
+    .eyebrow { font-size: 11px; letter-spacing: .12em; font-weight: 800; text-transform: uppercase; opacity: .78; }
+    .hero h1 { margin: 8px 0 7px; font-size: clamp(24px, 3vw, 34px); line-height: 1.15; letter-spacing: -.035em; }
+    .hero p { margin: 0; color: #edfff3d9; max-width: 530px; }
+    .hero-art { width: 155px; flex: 0 0 auto; opacity: .95; filter: drop-shadow(0 13px 15px #084d3148); }
+    .hero-status { margin-top: 17px; display: inline-flex; gap: 8px; align-items: center; border: 1px solid #ffffff47; border-radius: 99px; padding: 6px 11px; color: white; background: #ffffff19; font-weight: 700; font-size: 12px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #b7c1bc; }
+    .hero-status.connected .status-dot { background: #8ef3ac; box-shadow: 0 0 0 4px #8ef3ac26; }
+    .hero-status.demo .status-dot { background: #ffd273; box-shadow: 0 0 0 4px #ffd27326; }
+    .section-heading { margin: 27px 0 13px; display: flex; align-items: end; justify-content: space-between; gap: 12px; }
+    .section-heading h2, .card-head h2 { margin: 0; font-size: 17px; letter-spacing: -.02em; }
+    .section-heading p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .stat-card, .panel, .product-card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); }
+    .stat-card { min-height: 116px; padding: 17px; display: flex; align-items: flex-start; justify-content: space-between; animation: rise .5s both; }
+    .stat-card:nth-child(2) { animation-delay: .08s; } .stat-card:nth-child(3) { animation-delay: .16s; } .stat-card:nth-child(4) { animation-delay: .24s; }
+    .stat-label { color: var(--muted); font-size: 12px; font-weight: 600; }
+    .stat-value { margin-top: 8px; font-size: 26px; font-weight: 800; letter-spacing: -.045em; }
+    .stat-icon { width: 37px; height: 37px; display: grid; place-items: center; border-radius: 12px; color: var(--green); background: var(--green-soft); font-size: 18px; }
+    .panel { padding: 20px; }
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 15px; }
+    .card-head .subtle { color: var(--muted); font-size: 12px; margin-top: 3px; }
+    .content-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(285px, .85fr); gap: 16px; align-items: start; margin-top: 18px; }
+    .cart-list { display: grid; gap: 10px; }
+    .cart-row { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 11px; border: 1px solid var(--line); border-radius: 14px; animation: slide-in .32s ease both; }
+    .cart-row.leaving { animation: slide-out .22s ease forwards; pointer-events: none; }
+    .cart-row.bump .qty-number { animation: bump .35s ease; }
+    .product-image { width: 49px; height: 49px; object-fit: cover; display: grid; place-items: center; overflow: hidden; border-radius: 13px; background: var(--surface-2); font-size: 25px; }
+    .product-image img { width: 100%; height: 100%; object-fit: cover; }
+    .product-name { font-size: 13px; font-weight: 750; }
+    .product-meta { margin-top: 3px; font-size: 11px; color: var(--muted); }
+    .detected { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; padding: 2px 7px; color: var(--green); background: var(--green-soft); border-radius: 99px; font-size: 10px; font-weight: 750; }
+    .detected:before { content: ""; width: 5px; height: 5px; background: currentColor; border-radius: 50%; }
+    .cart-right { display: flex; align-items: center; gap: 13px; }
+    .quantity-control { display: flex; align-items: center; gap: 8px; }
+    .qty-number { min-width: 18px; text-align: center; font-weight: 800; }
+    .qty-button { width: 27px; height: 27px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; color: var(--text); background: var(--surface); }
+    .line-total { min-width: 72px; text-align: right; font-weight: 800; }
+    .empty-state { padding: 34px 15px; text-align: center; color: var(--muted); }
+    .empty-icon { font-size: 30px; margin-bottom: 6px; }
+    .bill-totals { display: grid; gap: 10px; margin: 3px 0 16px; }
+    .total-row { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); }
+    .total-row strong { color: var(--text); }
+    .total-row.grand { margin-top: 3px; padding-top: 13px; border-top: 1px dashed var(--line); color: var(--text); font-size: 16px; font-weight: 800; }
+    .bill-actions { display: grid; grid-template-columns: 1fr 1.25fr; gap: 9px; }
+    .event-list { display: grid; gap: 0; }
+    .event-row { display: grid; grid-template-columns: 8px 1fr auto; align-items: start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .event-row:last-child { border-bottom: 0; }
+    .event-dot { width: 7px; height: 7px; margin-top: 6px; border-radius: 50%; background: var(--green); }
+    .event-row.warning .event-dot { background: #e0a230; }
+    .event-message { font-size: 12px; font-weight: 650; overflow-wrap: anywhere; }
+    .event-time { color: var(--muted); font-size: 10px; }
+    .source-label { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .demo-panel { margin-top: 16px; }
+    .product-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; }
+    .product-card { position: relative; overflow: hidden; padding: 13px; box-shadow: none; transition: transform .18s, border-color .18s; }
+    .product-card:hover { transform: translateY(-2px); border-color: #a8d1b4; }
+    .product-card .product-image { width: 46px; height: 46px; margin-bottom: 10px; font-size: 24px; }
+    .product-card .product-name { min-height: 20px; }
+    .product-price { margin-top: 3px; font-size: 12px; font-weight: 700; }
+    .stock-copy { margin-top: 2px; color: var(--muted); font-size: 10px; }
+    .demo-actions { display: flex; gap: 6px; margin-top: 10px; }
+    .demo-actions .button { flex: 1; padding: 6px 5px; font-size: 11px; }
+    .simulated-label { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 99px; color: var(--amber); background: var(--amber-soft); font-size: 11px; font-weight: 750; }
+    .switch-line { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; font-weight: 650; }
+    .switch { appearance: none; width: 37px; height: 21px; position: relative; border-radius: 99px; background: #bdc8c0; transition: background .2s; cursor: pointer; }
+    .switch:checked { background: var(--green); }
+    .switch:before { content: ""; position: absolute; width: 15px; height: 15px; top: 3px; left: 3px; border-radius: 50%; background: white; transition: transform .2s; box-shadow: 0 1px 3px #0002; }
+    .switch:checked:before { transform: translateX(16px); }
+    .inline-controls { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+    .field { display: grid; gap: 5px; color: var(--muted); font-size: 11px; font-weight: 650; }
+    .input { min-width: 0; width: 100%; height: 39px; padding: 8px 11px; border: 1px solid var(--line); border-radius: 10px; outline: none; color: var(--text); background: var(--surface); }
+    .input:focus { border-color: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 15%, transparent); }
+    .hardware-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(310px, .9fr); gap: 16px; margin-top: 17px; }
+    .code-block { max-height: 430px; overflow: auto; padding: 15px; border-radius: 12px; color: #ddf5e5; background: #17241c; font: 11px/1.65 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .help-copy { color: var(--muted); font-size: 12px; }
+    .help-copy p { margin: 8px 0; }
+    .help-copy code { padding: 2px 5px; color: var(--green); border-radius: 5px; background: var(--green-soft); font-size: 11px; }
+    details { border: 1px solid var(--line); border-radius: 13px; padding: 12px 14px; background: var(--surface); }
+    details summary { cursor: pointer; font-weight: 750; }
+    .admin-lock { max-width: 430px; margin: 60px auto; }
+    .admin-lock .field { margin: 15px 0 10px; }
+    .admin-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 16px 0; }
+    .admin-stat { padding: 16px; }
+    .admin-stat .stat-value { font-size: 22px; }
+    .admin-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; }
+    .chart { min-height: 175px; display: flex; align-items: end; justify-content: space-around; gap: 9px; padding: 15px 5px 0; border-bottom: 1px solid var(--line); }
+    .bar-wrap { flex: 1; height: 145px; display: flex; flex-direction: column; align-items: center; justify-content: end; gap: 6px; min-width: 0; }
+    .bar { width: min(32px, 75%); min-height: 3px; border-radius: 7px 7px 2px 2px; background: linear-gradient(180deg, #4bc477, #16804a); transition: height .35s ease; }
+    .bar-label { font-size: 9px; color: var(--muted); white-space: nowrap; }
+    .bar-value { font-size: 9px; color: var(--muted); min-height: 14px; white-space: nowrap; }
+    .top-product-list { display: grid; gap: 12px; padding: 5px 0; }
+    .top-product { display: grid; grid-template-columns: minmax(65px, 105px) 1fr 30px; align-items: center; gap: 9px; font-size: 11px; }
+    .progress { height: 8px; overflow: hidden; border-radius: 99px; background: var(--surface-2); }
+    .progress span { display: block; height: 100%; border-radius: inherit; background: var(--green); }
+    .table-wrap { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
+    th { padding: 10px 9px; color: var(--muted); font-size: 10px; font-weight: 750; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    td { padding: 11px 9px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    tr:last-child td { border-bottom: 0; }
+    .badge { display: inline-flex; padding: 3px 8px; border-radius: 99px; color: var(--green); background: var(--green-soft); font-size: 10px; font-weight: 750; white-space: nowrap; }
+    .badge.low { color: var(--amber); background: var(--amber-soft); } .badge.out { color: var(--red); background: var(--red-soft); }
+    .stock-input { width: 78px; height: 31px; padding: 5px 7px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text); }
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 11px; }
+    .form-grid .wide { grid-column: 1 / -1; }
+    .settings-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .tools-wrap { display: flex; gap: 8px; flex-wrap: wrap; }
+    .alert-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .alert-row:last-child { border: 0; }
+    .modal-backdrop { position: fixed; inset: 0; z-index: 60; display: none; align-items: center; justify-content: center; padding: 18px; background: #10201880; backdrop-filter: blur(4px); }
+    .modal-backdrop.open { display: flex; }
+    .receipt { width: min(470px, 100%); max-height: min(88vh, 760px); overflow: auto; padding: 28px; border-radius: 20px; color: #1c2821; background: #fff; box-shadow: 0 28px 80px #0003; animation: pop .3s cubic-bezier(.2, .8, .2, 1) both; }
+    .receipt-head { text-align: center; padding-bottom: 16px; border-bottom: 1px dashed #dfe7e1; }
+    .receipt-head h2 { margin: 0; color: #176f40; font-size: 19px; }
+    .receipt-head p { margin: 4px 0; color: #6d7a71; font-size: 11px; }
+    .receipt-meta { display: flex; justify-content: space-between; margin: 14px 0; color: #64736a; font-size: 11px; }
+    .receipt table { font-size: 11px; }
+    .receipt th { color: #77837a; }
+    .receipt td, .receipt th { padding: 8px 4px; }
+    .receipt-total { display: flex; justify-content: space-between; margin-top: 13px; padding-top: 12px; border-top: 1px dashed #dfe7e1; font-size: 16px; font-weight: 850; }
+    .receipt-actions { display: flex; gap: 8px; margin-top: 20px; }
+    .receipt-actions .button { flex: 1; color: #203027; }
+    .receipt-actions .button.primary { color: white; }
+    .toast-host { position: fixed; z-index: 90; top: 88px; right: 20px; display: grid; gap: 9px; width: min(350px, calc(100% - 40px)); pointer-events: none; }
+    .toast { display: flex; align-items: center; gap: 10px; padding: 13px 15px; border: 1px solid var(--line); border-radius: 14px; color: var(--text); background: var(--surface); box-shadow: var(--shadow); animation: toast-in .3s ease both; pointer-events: auto; }
+    .toast.out { animation: toast-out .24s ease forwards; }
+    .toast-icon { width: 25px; height: 25px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 50%; color: var(--green); background: var(--green-soft); font-weight: 850; }
+    .toast.warning .toast-icon { color: var(--amber); background: var(--amber-soft); }
+    .toast-text { font-size: 12px; font-weight: 700; }
+    .confetti-piece { position: fixed; z-index: 100; top: 44%; left: 50%; width: 9px; height: 13px; pointer-events: none; animation: confetti 1.25s ease-out forwards; }
+    .drop-emoji { position: fixed; z-index: 50; font-size: 29px; pointer-events: none; animation: drop .58s cubic-bezier(.15,.7,.25,1) forwards; }
+    .footer-note { margin: 21px 0; color: var(--muted); text-align: center; font-size: 10px; }
+    .ai-dashboard { margin-top: 17px; }
+    .camera-layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, .7fr); gap: 15px; }
+    .camera-view { position: relative; min-height: 290px; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 14px; background: #101914; }
+    .camera-view video, .camera-view canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .camera-view video { object-fit: contain; }
+    .camera-view canvas { pointer-events: none; }
+    .camera-placeholder { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 8px; padding: 20px; color: #d7e7dc; text-align: center; }
+    .camera-placeholder .camera-icon { font-size: 34px; }
+    .camera-placeholder small { max-width: 380px; color: #a6b8ad; }
+    .camera-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+    .camera-metric { padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+    .camera-metric strong { display: block; font-size: 16px; }
+    .camera-metric span { color: var(--muted); font-size: 10px; }
+    .camera-controls { display: flex; flex-wrap: wrap; gap: 7px; }
+    .ai-status { display: inline-flex; align-items: center; gap: 7px; padding: 6px 9px; border-radius: 99px; color: var(--muted); background: var(--surface-2); font-size: 11px; font-weight: 750; }
+    .ai-status:before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #93a09a; }
+    .ai-status.ready { color: var(--green); background: var(--green-soft); }
+    .ai-status.ready:before { background: var(--green); }
+    .ai-status.busy { color: var(--amber); background: var(--amber-soft); }
+    .ai-status.busy:before { background: #e6a432; }
+    .ai-status.error { color: var(--red); background: var(--red-soft); }
+    .ai-status.error:before { background: var(--red); }
+    .track-list { display: grid; gap: 8px; max-height: 365px; overflow: auto; }
+    .track-card { padding: 11px; border: 1px solid var(--line); border-left: 3px solid #4693df; border-radius: 12px; background: var(--surface); }
+    .track-card.recognized { border-left-color: var(--green); }
+    .track-card.scanning { border-left-color: #e2a330; }
+    .track-card.unknown { border-left-color: var(--red); }
+    .track-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+    .track-name { font-weight: 750; font-size: 12px; }
+    .track-state { color: var(--muted); font-size: 10px; white-space: nowrap; }
+    .track-details { margin-top: 4px; color: var(--muted); font-size: 10px; overflow-wrap: anywhere; }
+    .track-actions { display: flex; gap: 6px; margin-top: 8px; }
+    .track-actions select { min-width: 0; flex: 1; }
+    .ai-notice { margin-top: 11px; padding: 10px 12px; border-radius: 11px; color: var(--muted); background: var(--surface-2); font-size: 11px; }
+    .billing-extra { padding-top: 9px; margin-top: 5px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+    .cart-brand { color: var(--muted); font-size: 10px; }
+    .hidden { display: none !important; }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+    @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes page-in { from { opacity: .3; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slide-in { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes slide-out { to { opacity: 0; transform: translateX(35px); max-height: 0; padding-block: 0; margin: 0; } }
+    @keyframes bump { 50% { transform: scale(1.45); color: var(--green); } }
+    @keyframes pop { from { opacity: 0; transform: scale(.92) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    @keyframes toast-in { from { opacity: 0; transform: translateX(22px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes toast-out { to { opacity: 0; transform: translateX(24px); } }
+    @keyframes drop { 0% { opacity: 0; transform: translate(0,-65px) scale(.5) rotate(-15deg); } 45% { opacity: 1; transform: translate(0,10px) scale(1.18) rotate(7deg); } 70% { transform: translate(0,-4px) scale(.95); } 100% { opacity: 0; transform: translate(0,28px) scale(.75); } }
+    @keyframes confetti { to { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--r)); } }
+    @media (max-width: 850px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .product-grid { grid-template-columns: repeat(2, 1fr); }
+      .content-grid, .hardware-grid { grid-template-columns: 1fr; }
+      .camera-layout { grid-template-columns: 1fr; }
+      .admin-columns { grid-template-columns: 1fr; }
+      .admin-grid { grid-template-columns: repeat(2,1fr); }
+      .settings-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 540px) {
+      .topbar-inner { width: calc(100% - 24px); height: 66px; gap: 9px; }
+      .brand-mark { width: 38px; height: 38px; border-radius: 12px; }
+      .brand-title { font-size: 12px; } .brand-subtitle { font-size: 10px; }
+      .topnav { gap: 5px; } .nav-tab { padding: 8px 10px; font-size: 12px; }
+      main { width: calc(100% - 24px); margin-top: 15px; }
+      .hero { min-height: 200px; padding: 23px 20px; border-radius: 19px; }
+      .hero-art { width: 83px; margin-right: -6px; }
+      .hero h1 { font-size: 24px; }
+      .hero p { font-size: 12px; max-width: 260px; }
+      .stats-grid { gap: 9px; } .stat-card { min-height: 103px; padding: 13px; border-radius: 15px; }
+      .stat-value { font-size: 23px; } .stat-icon { width: 32px; height: 32px; font-size: 16px; }
+      .panel { padding: 15px; border-radius: 16px; }
+      .cart-row { grid-template-columns: 42px minmax(0, 1fr); gap: 9px; }
+      .cart-row .product-image { width: 41px; height: 41px; }
+      .cart-right { grid-column: 2; justify-content: space-between; }
+      .line-total { min-width: auto; }
+      .section-heading { align-items: flex-start; flex-direction: column; }
+      .inline-controls { width: 100%; }
+      .inline-controls .input { flex: 1; }
+      .settings-grid, .form-grid { grid-template-columns: 1fr; }
+      .form-grid .wide { grid-column: auto; }
+      .receipt { padding: 21px; }
+      .camera-view { min-height: 235px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *:before, *:after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+    @media print {
+      body * { visibility: hidden !important; }
+      .modal-backdrop.open, .modal-backdrop.open * { visibility: visible !important; }
+      .modal-backdrop.open { display: block; position: absolute; inset: 0; padding: 0; background: white; }
+      .receipt { width: 100%; max-height: none; overflow: visible; border-radius: 0; box-shadow: none; padding: 10mm; }
+      .receipt-actions { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <button class="brand-mark" id="secretHardware" aria-label="Project logo">
+        <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M5 8h3l3.2 14h13.4l3.1-10.5H10" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="13.5" cy="26" r="1.8" fill="currentColor"/><circle cx="23" cy="26" r="1.8" fill="currentColor"/><path d="M14 5h9m-4.5-4v8" stroke="#C9EF9B" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <div class="brand-copy">
+        <div class="brand-title" id="secretAdmin">SMART TROLLEY SYSTEM</div>
+        <div class="brand-subtitle">A smarter way to shop · Raspberry Pi exhibition project</div>
+      </div>
+      <nav class="topnav" aria-label="Main navigation"><button class="nav-tab">Dashboard</button></nav>
+      <button class="icon-button" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">☾</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="page active" id="dashboardPage">
+      <div class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">SMART TROLLEY SYSTEM · LIVE DASHBOARD</div>
+          <h1>Shopping, made smarter.</h1>
+          <p>Every scan updates your trolley in real time. Keep track, stay on budget, and check out with confidence.</p>
+          <div class="hero-status" id="connectionStatus"><span class="status-dot"></span><span id="statusText">Disconnected</span></div>
+        </div>
+        <svg class="hero-art" viewBox="0 0 180 150" fill="none" aria-label="Illustration of a shopping trolley">
+          <path d="M30 30h15l16 75h72l17-54H53" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M68 56h67M74 74h55M81 91h42" stroke="#D6F4D6" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="75" cy="124" r="9" fill="#D6F4D6"/><circle cx="129" cy="124" r="9" fill="#D6F4D6"/>
+          <path d="M98 22v31m-15-16h30" stroke="#D3F394" stroke-width="6" stroke-linecap="round"/>
+          <path d="M22 30h17" stroke="#D3F394" stroke-width="7" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <div class="section-heading"><div><h2>Your trolley at a glance</h2><p>Live totals update as products are scanned or removed.</p></div><span class="simulated-label hidden" id="simulatedFlag">◉ Demo activity</span></div>
+      <div class="stats-grid">
+        <article class="stat-card"><div><div class="stat-label">Different products</div><div class="stat-value" id="statProducts">0</div></div><span class="stat-icon">▦</span></article>
+        <article class="stat-card"><div><div class="stat-label">Total quantity</div><div class="stat-value" id="statQty">0</div></div><span class="stat-icon">↗</span></article>
+        <article class="stat-card"><div><div class="stat-label">Items in trolley</div><div class="stat-value" id="statItems">0</div></div><span class="stat-icon">🛒</span></article>
+        <article class="stat-card"><div><div class="stat-label">Total amount</div><div class="stat-value" id="statAmount">₹0.00</div></div><span class="stat-icon">₹</span></article>
+      </div>
+
+      <section class="panel ai-dashboard">
+        <div class="card-head">
+          <div><h2>AI product tracking</h2><div class="subtle">Automatic camera monitoring · product-specific YOLO model · trolley-zone filtering</div></div>
+          <span class="ai-status" id="aiEngineStatus">Product model needs configuration</span>
+        </div>
+        <div class="camera-layout">
+          <div>
+            <div class="camera-view" id="cameraView">
+              <video id="cameraVideo" autoplay muted playsinline aria-label="Live trolley camera feed"></video>
+              <canvas id="cameraOverlay" aria-hidden="true"></canvas>
+              <div class="camera-placeholder" id="cameraPlaceholder"><span class="camera-icon">⌗</span><strong>Camera permission needed</strong><small>Allow camera access to start automatic trolley monitoring.</small></div>
+            </div>
+            <div class="camera-controls" style="margin-top:10px">
+              <span class="ai-status" id="trackingStatus">Camera stopped</span>
+            </div>
+            <div class="camera-metrics">
+              <div class="camera-metric"><strong id="detectedObjectCount">0</strong><span>Visible objects</span></div>
+              <div class="camera-metric"><strong id="trackedProductCount">0</strong><span>Cart products</span></div>
+              <div class="camera-metric"><strong id="labelStatus">Waiting</strong><span>Label scanning</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="card-head" style="margin-bottom:9px"><div><h2>Tracked objects</h2><div class="subtle">A track is added once; removal requires repeated absence.</div></div></div>
+            <div class="track-list" id="trackList"><div class="empty-state" style="padding:18px">Automatic tracking starts when the camera is ready; a custom product model is required for detections.</div></div>
+            <div class="ai-notice" id="aiNotice">On load, the browser requests camera permission and starts monitoring. Product recognition requires a configured custom-trained product model; unknown detections never change the cart. Remote model endpoints receive camera crops for inference. Camera permission requires localhost or HTTPS.</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="content-grid">
+        <section class="panel">
+          <div class="card-head"><div><h2>Live shopping cart</h2><div class="subtle">Detected products, quantities and line totals</div></div><span class="badge" id="cartCount">0 items</span></div>
+          <div class="cart-list" id="cartList"></div>
+        </section>
+        <aside class="panel">
+          <div class="card-head"><div><h2>Billing summary</h2><div class="subtle">Review before generating your bill</div></div><span>🧾</span></div>
+          <div class="bill-totals">
+            <div class="total-row"><span>Subtotal</span><strong id="billSubtotal">₹0.00</strong></div>
+            <div class="total-row"><span>Number of products</span><strong id="billProducts">0</strong></div>
+            <div class="total-row"><span>Total quantity</span><strong id="billQty">0</strong></div>
+            <div class="billing-extra">
+              <div class="total-row"><span>Discount</span><strong id="billDiscount">−₹0.00</strong></div>
+              <div class="total-row"><span>GST</span><strong id="billGst">₹0.00</strong></div>
+            </div>
+            <div class="total-row grand"><span>Final amount</span><strong id="billTotal">₹0.00</strong></div>
+          </div>
+          <div class="bill-actions"><button class="button" id="clearCart">Clear cart</button><button class="button primary" id="generateBill">Generate bill</button></div>
+        </aside>
+      </div>
+
+      <section class="panel" style="margin-top:16px">
+        <div class="card-head"><div><h2>Recent activity</h2><div class="subtle">Latest trolley and billing events</div></div><span>◷</span></div>
+        <div class="event-list" id="eventList"></div>
+      </section>
+      <div class="footer-note">SMART TROLLEY SYSTEM · Science Exhibition Project · Hardware is only shown as connected when a WebSocket is open.</div>
+    </section>
+
+    <section class="page" id="hardwarePage">
+      <div class="section-heading" style="margin-top:4px"><div><h2>Raspberry Pi hardware connection</h2><p>Connect a real trolley over WebSocket, or switch on Demo Mode to test locally.</p></div><button class="button" data-go="dashboard">← Dashboard</button></div>
+      <div class="hardware-grid">
+        <section class="panel">
+          <div class="card-head"><div><h2>WebSocket connection</h2><div class="subtle">The status turns green only after the handshake succeeds.</div></div><span>🟢</span></div>
+          <label class="field">WebSocket address<input class="input" id="wsAddress" type="text" value="ws://raspberrypi.local:8765" spellcheck="false" autocomplete="off"></label>
+          <div class="inline-controls" style="margin-top:11px"><button class="button primary" id="connectWs">Connect</button><button class="button" id="disconnectWs" disabled>Disconnect</button><label class="switch-line"><input class="switch" id="demoToggleHardware" type="checkbox" checked> Demo Mode</label></div>
+          <div class="help-copy" style="margin-top:17px">
+            <p><strong>Message format</strong> — send one JSON event per message. A JSON array of events is also accepted.</p>
+            <div class="code-block" style="max-height:105px">{"productId":"P001","productName":"Milk","price":30,"action":"add","quantity":1}</div>
+            <p><code>action</code> is <code>add</code> or <code>remove</code>; <code>quantity</code> defaults to 1. Known IDs use the saved product name, price and picture. Unknown IDs are created from message data with a starting stock of 99 unless a valid <code>stock</code> is supplied. Invalid messages are ignored and logged.</p>
+            <p><strong>Secure page note:</strong> Browsers block an insecure <code>ws://</code> connection from an HTTPS page. Serve this dashboard over local HTTP on the Pi (or use secure <code>wss://</code> with a valid certificate).</p>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="card-head"><div><h2>Run the dashboard on your Pi</h2><div class="subtle">Same local network, simple HTTP server</div></div><span>🍓</span></div>
+          <div class="help-copy">
+            <p>Save this file as <code>index.html</code> on your Raspberry Pi, then run:</p>
+            <div class="code-block" style="max-height:62px">python3 -m http.server 8000</div>
+            <p>Open <code>http://&lt;raspberrypi-ip&gt;:8000</code> on a device on the same network. Then connect to <code>ws://raspberrypi.local:8765</code>.</p>
+            <p><strong>Camera access:</strong> The simple HTTP server is fine for the WebSocket demo, but browsers block camera access on remote plain-HTTP pages. For camera tracking, open this page from <code>localhost</code> or serve it over <code>https://</code>.</p>
+            <p>Install the Python libraries with <code>python3 -m pip install websockets gpiozero</code>.</p>
+          </div>
+          <div class="code-block" id="pythonExample"></div>
+        </section>
+      </div>
+      <details style="margin-top:16px">
+        <summary>Using an ESP32 instead</summary>
+        <p class="help-copy">This example sends the same event format to a WebSocket server reachable on your network. Replace the Wi-Fi credentials and server address with your own.</p>
+        <div class="code-block" id="espExample"></div>
+      </details>
+      <section class="panel" style="margin-top:16px"><div class="card-head"><div><h2>Hardware event log</h2><div class="subtle">Incoming, invalid and connection events are recorded on the dashboard.</div></div></div><div class="event-list" id="hardwareEvents"></div></section>
+    </section>
+
+    <section class="page" id="adminPage">
+      <div class="section-heading" style="margin-top:4px"><div><h2>Exhibition admin panel</h2><p>Manage inventory, review sales and configure your trolley.</p></div><button class="button" data-go="dashboard">← Dashboard</button></div>
+      <div class="panel admin-lock" id="adminLock">
+        <div class="card-head"><div><h2>Admin PIN</h2><div class="subtle">The PIN is stored in this browser only. This is not real security.</div></div><span>🔐</span></div>
+        <label class="field">Enter PIN<input class="input" id="pinInput" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="4–8 digits"></label>
+        <button class="button primary" id="unlockAdmin" style="width:100%;margin-top:11px">Unlock admin</button>
+        <div class="help-copy" style="margin-top:10px">Default PIN: <strong>1234</strong></div>
+      </div>
+      <div id="adminContent" class="hidden">
+        <div class="inline-controls" style="justify-content:flex-end;margin-bottom:10px"><button class="button" id="lockAdmin">Lock</button></div>
+        <div class="admin-grid">
+          <article class="panel admin-stat"><div class="stat-label">Total revenue</div><div class="stat-value" id="adminRevenue">₹0</div></article>
+          <article class="panel admin-stat"><div class="stat-label">Bills generated</div><div class="stat-value" id="adminBills">0</div></article>
+          <article class="panel admin-stat"><div class="stat-label">Items sold</div><div class="stat-value" id="adminItemsSold">0</div></article>
+          <article class="panel admin-stat"><div class="stat-label">Low-stock alerts</div><div class="stat-value" id="adminLowCount">0</div></article>
+        </div>
+        <div class="admin-columns">
+          <section class="panel"><div class="card-head"><div><h2>Revenue · last 7 days</h2><div class="subtle">Daily totals from saved bills</div></div></div><div class="chart" id="revenueChart"></div></section>
+          <section class="panel"><div class="card-head"><div><h2>Top products</h2><div class="subtle">Units sold across saved bills</div></div></div><div class="top-product-list" id="topProducts"></div></section>
+        </div>
+        <section class="panel" style="margin-bottom:15px"><div class="card-head"><div><h2>Live trolley view</h2><div class="subtle" id="adminLiveStatus">Disconnected</div></div><span class="badge" id="adminLiveTotal">₹0.00</span></div><div class="table-wrap"><table><thead><tr><th>Product</th><th>Quantity</th><th>Line total</th></tr></thead><tbody id="liveCartTable"></tbody></table></div></section>
+        <section class="panel" style="margin-bottom:15px"><div class="card-head"><div><h2>Stock alerts</h2><div class="subtle">Products at or below your low-stock level</div></div></div><div id="stockAlerts"></div></section>
+        <section class="panel" style="margin-bottom:15px"><div class="card-head"><div><h2>Sales history</h2><div class="subtle">Most recent 15 completed bills</div></div><button class="button small danger" id="clearHistory">Clear sales history</button></div><div class="table-wrap"><table><thead><tr><th>Bill no.</th><th>Date</th><th>Products</th><th>Quantity</th><th>Total</th><th></th></tr></thead><tbody id="salesHistory"></tbody></table></div></section>
+        <div class="admin-columns">
+          <section class="panel">
+            <div class="card-head"><div><h2 id="productFormTitle">Add a product</h2><div class="subtle">Saved locally in this browser</div></div></div>
+            <form id="productForm">
+              <div class="form-grid">
+                <label class="field">Product ID<input class="input" id="productId" required maxlength="24" placeholder="P009"></label>
+                <label class="field">Product name<input class="input" id="productName" required maxlength="60" placeholder="Orange juice"></label>
+                <label class="field">Brand<input class="input" id="productBrand" maxlength="60" placeholder="Brand as printed on label"></label>
+                <label class="field">AI model class<input class="input" id="productModelClass" maxlength="60" placeholder="Exact trained model class"></label>
+                <label class="field">Barcode / QR value<input class="input" id="productBarcode" maxlength="80" placeholder="Optional exact barcode"></label>
+                <label class="field">Weight / quantity<input class="input" id="productWeight" maxlength="30" placeholder="e.g. 500 g, 1 L"></label>
+                <label class="field">Category<input class="input" id="productCategory" maxlength="40" placeholder="Dairy, bakery, ..."></label>
+                <label class="field">Price (₹)<input class="input" id="productPrice" required min="0" step="0.01" type="number" placeholder="50"></label>
+                <label class="field">Available stock<input class="input" id="productStock" required min="0" step="1" type="number" placeholder="20"></label>
+                <label class="field">Emoji<input class="input" id="productEmoji" maxlength="8" value="🛍️" placeholder="🍊"></label>
+                <label class="field">Or upload a photo (max 300 KB)<input class="input" id="productPhoto" type="file" accept="image/*"></label>
+                <div class="inline-controls wide"><button class="button primary" type="submit" id="saveProduct">Save product</button><button class="button hidden" type="button" id="cancelEdit">Cancel edit</button></div>
+              </div>
+            </form>
+          </section>
+          <section class="panel">
+            <div class="card-head"><div><h2>Settings & AI model</h2><div class="subtle">Configure billing, trolley camera zone, and custom product-model inference</div></div></div>
+            <div class="settings-grid">
+              <label class="field">Store name<input class="input" id="storeName" maxlength="60"></label>
+              <label class="field">Low-stock level<input class="input" id="lowStockLevel" min="0" step="1" type="number"></label>
+              <label class="field">Discount (%)<input class="input" id="discountRate" min="0" max="100" step="0.01" type="number"></label>
+              <label class="field">GST (%)<input class="input" id="gstRate" min="0" max="100" step="0.01" type="number"></label>
+              <label class="field">Custom YOLO / Roboflow inference URL<input class="input" id="modelEndpoint" type="url" placeholder="https://detect.roboflow.com/model/version"></label>
+              <label class="field">Model API key (memory only)<input class="input" id="modelApiKey" type="password" autocomplete="off" placeholder="Not saved in this browser"></label>
+              <label class="field">Model confidence threshold (%)<input class="input" id="modelConfidence" min="1" max="99" step="1" type="number"></label>
+              <label class="field">Trolley zone left (%)<input class="input" id="zoneLeft" min="0" max="95" step="1" type="number"></label>
+              <label class="field">Trolley zone top (%)<input class="input" id="zoneTop" min="0" max="95" step="1" type="number"></label>
+              <label class="field">Trolley zone right (%)<input class="input" id="zoneRight" min="5" max="100" step="1" type="number"></label>
+              <label class="field">Trolley zone bottom (%)<input class="input" id="zoneBottom" min="5" max="100" step="1" type="number"></label>
+              <label class="field">New PIN (4–8 digits)<input class="input" id="newPin" inputmode="numeric" maxlength="8" placeholder="Keep current"></label>
+            </div>
+            <div class="ai-notice">Use a custom-trained product detector whose classes exactly match each product’s AI model class. Accepted inference response: JSON <code>{"predictions":[{"x":320,"y":240,"width":100,"height":120,"class":"milk","confidence":0.92}]}</code> with pixel-center box coordinates. Roboflow Hosted inference uses the model URL and an optional API key. The key stays in memory only, so re-enter it each session. Browser inference requests expose that key and upload cropped trolley frames to the configured endpoint; prefer a private backend proxy. Camera is drawn inside the blue trolley boundary; only zone-contained detections are considered. Default zone: left/top 15%, right 85%, bottom 90%.</div>
+            <button class="button primary" id="saveSettings" style="margin-top:12px">Save settings</button>
+          </section>
+        </div>
+        <section class="panel" style="margin-bottom:15px"><div class="card-head"><div><h2>Inventory</h2><div class="subtle">Adjust stock or edit product details</div></div><span class="badge" id="inventoryCount">0 products</span></div><div class="table-wrap"><table><thead><tr><th>Product</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead><tbody id="inventoryTable"></tbody></table></div></section>
+        <section class="panel"><div class="card-head"><div><h2>Data tools</h2><div class="subtle">Export, import, or restore local exhibition data</div></div></div><div class="tools-wrap"><button class="button" id="exportSales">Export sales CSV</button><button class="button" id="exportProducts">Export products JSON</button><label class="button" for="importProducts" style="display:inline-flex;align-items:center">Import products JSON</label><input id="importProducts" type="file" accept="application/json,.json" class="hidden"><button class="button danger" id="resetProducts">Reset sample products</button></div></section>
+      </div>
+    </section>
+  </main>
+  <div class="toast-host" id="toastHost" aria-live="polite"></div>
+  <div class="modal-backdrop" id="receiptModal" role="dialog" aria-modal="true" aria-label="Digital receipt"><div class="receipt" id="receiptContent"></div></div>
+  <script>
+    (() => {
+      "use strict";
+      const STORAGE = { products: "smartTrolley.products.v1", sales: "smartTrolley.sales.v1", settings: "smartTrolley.settings.v1", pin: "smartTrolley.pin.v1", theme: "smartTrolley.theme.v1" };
+      const sampleProducts = [
+        { id: "P001", name: "Milk", modelClass: "milk", weight: "1 L", category: "Dairy", price: 30, stock: 20, emoji: "🥛" },
+        { id: "P002", name: "Bread", modelClass: "bread", weight: "1 loaf", category: "Bakery", price: 40, stock: 18, emoji: "🍞" },
+        { id: "P003", name: "Biscuit", modelClass: "biscuit", category: "Snacks", price: 20, stock: 25, emoji: "🍪" },
+        { id: "P004", name: "Rice (1 kg)", modelClass: "rice", weight: "1 kg", category: "Staples", price: 65, stock: 15, emoji: "🍚" },
+        { id: "P005", name: "Eggs (6)", modelClass: "eggs", weight: "6 pcs", category: "Dairy", price: 48, stock: 14, emoji: "🥚" },
+        { id: "P006", name: "Apple (1 kg)", modelClass: "apple", weight: "1 kg", category: "Produce", price: 120, stock: 12, emoji: "🍎" },
+        { id: "P007", name: "Tea Powder", modelClass: "tea powder", category: "Beverages", price: 85, stock: 16, emoji: "🍵" },
+        { id: "P008", name: "Chips", modelClass: "chips", category: "Snacks", price: 20, stock: 22, emoji: "🍟" }
+      ];
+      const safeRead = (key, fallback) => {
+        try {
+          const value = localStorage.getItem(key);
+          return value === null ? fallback : JSON.parse(value);
+        } catch (error) {
+          console.error("Could not read trolley data from local storage:", error);
+          return fallback;
+        }
+      };
+      const safeWrite = (key, value) => {
+        try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+        catch (error) { console.error("Could not save trolley data to local storage:", error); toast("Could not save data. Check browser storage space or permissions.", "warning"); return false; }
+      };
+      const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+      const money = value => "₹" + (Number(value) || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const validProduct = p => p && typeof p.id === "string" && p.id.trim() && typeof p.name === "string" && p.name.trim() && Number.isFinite(Number(p.price)) && Number(p.price) >= 0 && Number.isInteger(Number(p.stock)) && Number(p.stock) >= 0;
+      let products = safeRead(STORAGE.products, null);
+      if (!Array.isArray(products) || !products.every(validProduct)) products = sampleProducts.map(p => ({ ...p }));
+      products = products.map(product => {
+        const sample = sampleProducts.find(item => item.id === product.id && item.name === product.name);
+        return sample ? { ...sample, ...product, modelClass: product.modelClass || sample.modelClass, weight: product.weight || sample.weight || "", category: product.category || sample.category } : product;
+      });
+      let sales = safeRead(STORAGE.sales, []);
+      if (!Array.isArray(sales)) sales = [];
+      let settings = safeRead(STORAGE.settings, { storeName: "Green Basket Market", lowStock: 5, discountRate: 0, gstRate: 0 });
+      if (!settings || typeof settings !== "object") settings = { storeName: "Green Basket Market", lowStock: 5, discountRate: 0, gstRate: 0 };
+      settings.storeName = typeof settings.storeName === "string" ? settings.storeName : "Green Basket Market";
+      settings.lowStock = Number.isInteger(Number(settings.lowStock)) && Number(settings.lowStock) >= 0 ? Number(settings.lowStock) : 5;
+      settings.discountRate = Number.isFinite(Number(settings.discountRate)) && Number(settings.discountRate) >= 0 && Number(settings.discountRate) <= 100 ? Number(settings.discountRate) : 0;
+      settings.gstRate = Number.isFinite(Number(settings.gstRate)) && Number(settings.gstRate) >= 0 && Number(settings.gstRate) <= 100 ? Number(settings.gstRate) : 0;
+      settings.modelEndpoint = typeof settings.modelEndpoint === "string" ? settings.modelEndpoint : "";
+      try {
+        const savedEndpoint = new URL(settings.modelEndpoint);
+        if (savedEndpoint.searchParams.has("api_key")) {
+          savedEndpoint.searchParams.delete("api_key");
+          settings.modelEndpoint = savedEndpoint.href;
+        }
+      } catch (error) {
+        if (settings.modelEndpoint) console.warn("Saved product-model URL is invalid and must be reconfigured:", error);
+      }
+      settings.modelConfidence = Number.isFinite(Number(settings.modelConfidence)) && Number(settings.modelConfidence) >= 1 && Number(settings.modelConfidence) <= 99 ? Number(settings.modelConfidence) : 65;
+      settings.zoneLeft = Number.isFinite(Number(settings.zoneLeft)) ? Math.min(95, Math.max(0, Number(settings.zoneLeft))) : 15;
+      settings.zoneTop = Number.isFinite(Number(settings.zoneTop)) ? Math.min(95, Math.max(0, Number(settings.zoneTop))) : 15;
+      settings.zoneRight = Number.isFinite(Number(settings.zoneRight)) ? Math.min(100, Math.max(5, Number(settings.zoneRight))) : 85;
+      settings.zoneBottom = Number.isFinite(Number(settings.zoneBottom)) ? Math.min(100, Math.max(5, Number(settings.zoneBottom))) : 90;
+      if (settings.zoneRight <= settings.zoneLeft) settings.zoneRight = Math.min(100, settings.zoneLeft + 5);
+      if (settings.zoneBottom <= settings.zoneTop) settings.zoneBottom = Math.min(100, settings.zoneTop + 5);
+      let pin = safeRead(STORAGE.pin, "1234");
+      if (typeof pin !== "string" || !/^\d{4,8}$/.test(pin)) pin = "1234";
+      let cart = {};
+      let events = [];
+      let demoMode = true;
+      let socket = null;
+      let adminUnlocked = false;
+      let editingId = null;
+      let pendingPhoto = "";
+      let activeReceiptBill = null;
+      let cameraStream = null;
+      let ocrWorker = null;
+      let cameraRunning = false;
+      let cameraPermissionDenied = false;
+      let cameraFrameBusy = false;
+      let cameraFrameTimer = null;
+      let cameraRetryTimer = null;
+      let nextTrackId = 1;
+      let tracks = [];
+      let barcodeDetector = null;
+      let lastBarcodeScan = 0;
+      let ocrBusy = false;
+      let inferenceErrors = 0;
+      let modelApiKey = "";
+      let frameRequestController = null;
+      let secretClicks = { hardware: [], admin: [] };
+      const $ = id => document.getElementById(id);
+      const persistProducts = () => safeWrite(STORAGE.products, products);
+      const persistSales = () => safeWrite(STORAGE.sales, sales);
+
+      function toast(message, type = "success") {
+        const node = document.createElement("div");
+        node.className = "toast" + (type === "warning" ? " warning" : "");
+        node.innerHTML = `<span class="toast-icon">${type === "warning" ? "!" : "✓"}</span><span class="toast-text">${esc(message)}</span>`;
+        $("toastHost").append(node);
+        setTimeout(() => { node.classList.add("out"); setTimeout(() => node.remove(), 260); }, 3000);
+      }
+      function logEvent(message, source = "Demo", warning = false) {
+        events.unshift({ message: String(message), source, warning, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) });
+        events = events.slice(0, 18);
+        renderEvents();
+      }
+      function productById(id) { return products.find(p => p.id.toLowerCase() === String(id).toLowerCase()); }
+      function cartTotals() {
+        const rows = Object.entries(cart).map(([id, quantity]) => ({ product: productById(id), quantity: Number(quantity) })).filter(row => row.product && row.quantity > 0);
+        const subtotal = rows.reduce((sum, row) => sum + row.product.price * row.quantity, 0);
+        const discount = Math.round(subtotal * settings.discountRate) / 100;
+        const gst = Math.round((subtotal - discount) * settings.gstRate) / 100;
+        return { rows, products: rows.length, quantity: rows.reduce((sum, row) => sum + row.quantity, 0), subtotal, discount, gst, total: subtotal - discount + gst };
+      }
+      function productPicture(product, extraClass = "") {
+        const image = product.image ? `<img src="${esc(product.image)}" alt="${esc(product.name)}">` : `<span aria-hidden="true">${esc(product.emoji || "🛍️")}</span>`;
+        return `<div class="product-image ${extraClass}">${image}</div>`;
+      }
+      function updateStatus() {
+        const open = socket && socket.readyState === WebSocket.OPEN;
+        const pill = $("connectionStatus");
+        pill.classList.toggle("connected", !!open);
+        pill.classList.toggle("demo", !open && demoMode);
+        $("statusText").textContent = open ? "Connected - Trolley hardware" : demoMode ? "Demo Mode - no hardware" : "Disconnected";
+        $("simulatedFlag").classList.toggle("hidden", !demoMode);
+        $("connectWs").disabled = !!open || !!(socket && socket.readyState === WebSocket.CONNECTING);
+        $("disconnectWs").disabled = !socket || socket.readyState === WebSocket.CLOSED;
+        $("adminLiveStatus").textContent = $("statusText").textContent;
+      }
+      function renderCart(bumpId = null, removeId = null) {
+        const totals = cartTotals();
+        const list = $("cartList");
+        const oldRow = removeId ? list.querySelector(`[data-row-id="${CSS.escape(removeId)}"]`) : null;
+        const rowsHtml = totals.rows.map(({ product, quantity }) => `
+          <article class="cart-row ${bumpId === product.id ? "bump" : ""}" data-row-id="${esc(product.id)}">
+            ${productPicture(product)}
+            <div><div class="product-name">${esc(product.name)}</div><div class="product-meta">${esc(product.id)} · ${money(product.price)} each${product.weight ? ` · ${esc(product.weight)}` : ""}</div>${product.brand ? `<div class="cart-brand">${esc(product.brand)}</div>` : ""}<span class="detected">${esc(product.detectionStatus || "In trolley")}</span></div>
+            <div class="cart-right"><div class="quantity-control"><button class="qty-button" data-cart-action="remove" data-id="${esc(product.id)}" aria-label="Remove one ${esc(product.name)}">−</button><span class="qty-number">${quantity}</span><button class="qty-button" data-cart-action="add" data-id="${esc(product.id)}" aria-label="Add one ${esc(product.name)}">+</button></div><div class="line-total">${money(product.price * quantity)}</div></div>
+          </article>`).join("");
+        if (removeId && oldRow && !cart[removeId]) {
+          const leavingRow = oldRow.cloneNode(true);
+          leavingRow.classList.add("leaving");
+          list.innerHTML = rowsHtml;
+          list.append(leavingRow);
+          setTimeout(() => { if (!cart[removeId]) { leavingRow.remove(); if (!list.children.length) list.innerHTML = emptyCartHtml(); } }, 220);
+        } else list.innerHTML = rowsHtml || emptyCartHtml();
+        $("statProducts").textContent = totals.products;
+        $("statQty").textContent = totals.quantity;
+        $("statItems").textContent = totals.quantity;
+        $("statAmount").textContent = money(totals.total);
+        $("billSubtotal").textContent = money(totals.subtotal);
+        $("billProducts").textContent = totals.products;
+        $("billQty").textContent = totals.quantity;
+        $("billDiscount").textContent = "−" + money(totals.discount);
+        $("billGst").textContent = money(totals.gst);
+        $("billTotal").textContent = money(totals.total);
+        $("trackedProductCount").textContent = String(totals.quantity);
+        $("cartCount").textContent = `${totals.quantity} item${totals.quantity === 1 ? "" : "s"}`;
+        $("generateBill").disabled = totals.quantity === 0;
+        $("clearCart").disabled = totals.quantity === 0;
+        renderLiveCart();
+      }
+      function emptyCartHtml() { return `<div class="empty-state"><div class="empty-icon">🛒</div><strong>Your trolley is waiting</strong><div>Connect the trolley hardware to add detected products.</div></div>`; }
+      function renderEvents() {
+        const markup = events.length ? events.map(event => `<div class="event-row ${event.warning ? "warning" : ""}"><span class="event-dot"></span><div><div class="event-message">${esc(event.message)}</div><span class="source-label">From ${esc(event.source)}</span></div><time class="event-time">${esc(event.time)}</time></div>`).join("") : `<div class="empty-state">No events yet. Add a demo scan or connect the trolley.</div>`;
+        $("eventList").innerHTML = markup;
+        $("hardwareEvents").innerHTML = markup;
+      }
+      function renderLiveCart() {
+        const totals = cartTotals();
+        $("liveCartTable").innerHTML = totals.rows.length ? totals.rows.map(({ product, quantity }) => `<tr><td>${esc(product.name)}</td><td>${quantity}</td><td>${money(product.price * quantity)}</td></tr>`).join("") : `<tr><td colspan="3" style="color:var(--muted)">The trolley is empty.</td></tr>`;
+        $("adminLiveTotal").textContent = money(totals.total);
+      }
+      function addToCart(id, quantity = 1, source = "Demo", animate = true) {
+        const p = productById(id);
+        if (!p) { logEvent(`Unknown product ${id}; event ignored.`, source, true); return false; }
+        const qty = Number(quantity);
+        if (!Number.isInteger(qty) || qty < 1) { logEvent(`Invalid quantity for ${p.name}; event ignored.`, source, true); return false; }
+        const available = p.stock - (cart[p.id] || 0);
+        if (qty > available) { toast(`Only ${Math.max(0, available)} ${p.name} available in stock.`, "warning"); logEvent(`Stock limit reached for ${p.name}.`, source, true); return false; }
+        cart[p.id] = (cart[p.id] || 0) + qty;
+        renderCart(p.id);
+        logEvent(`${p.name} × ${qty} added to trolley.`, source);
+        toast(`${p.name} added successfully`);
+        if (animate) dropProduct(p.id);
+        return true;
+      }
+      function removeFromCart(id, quantity = 1, source = "Demo") {
+        const p = productById(id);
+        if (!p || !cart[p.id]) { logEvent(`No ${p ? p.name : id} in trolley to remove.`, source, true); return false; }
+        const qty = Number(quantity);
+        if (!Number.isInteger(qty) || qty < 1) { logEvent(`Invalid removal quantity; event ignored.`, source, true); return false; }
+        const removed = Math.min(qty, cart[p.id]);
+        cart[p.id] -= removed;
+        const removeRowId = cart[p.id] === 0 ? p.id : null;
+        if (!cart[p.id]) delete cart[p.id];
+        renderCart(null, removeRowId);
+        logEvent(`${p.name} × ${removed} removed from trolley.`, source);
+        toast(`${p.name} removed from trolley`, "warning");
+        return true;
+      }
+      function dropProduct(id) {
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        const target = document.querySelector(`[data-row-id="${CSS.escape(id)}"] .product-image`) || document.querySelector(".hero-art");
+        if (!target) return;
+        const rect = target.getBoundingClientRect();
+        const node = document.createElement("span");
+        const p = productById(id);
+        node.className = "drop-emoji";
+        node.textContent = p?.emoji || "🛍️";
+        node.style.left = `${rect.left + rect.width / 2}px`;
+        node.style.top = `${Math.max(75, rect.top - 15)}px`;
+        document.body.append(node);
+        setTimeout(() => node.remove(), 650);
+      }
+      function clearCurrentCart() {
+        if (!cartTotals().quantity) return;
+        cart = {};
+        renderCart();
+        logEvent("Cart cleared.", socket && socket.readyState === WebSocket.OPEN ? "Hardware" : "Demo");
+        toast("Cart cleared");
+      }
+      function generateBill() {
+        const totals = cartTotals();
+        if (!totals.quantity) return;
+        const now = new Date();
+        const bill = { id: `ST-${now.getTime().toString().slice(-8)}`, date: now.toISOString(), items: totals.rows.map(({ product, quantity }) => ({ id: product.id, name: product.name, brand: product.brand || "", weight: product.weight || "", price: product.price, quantity })), subtotal: totals.subtotal, discount: totals.discount, discountRate: settings.discountRate, gst: totals.gst, gstRate: settings.gstRate, total: totals.total };
+        showReceipt(bill, true);
+      }
+      function showReceipt(bill, current = false) {
+        activeReceiptBill = current ? { ...bill, isCurrent: true } : { ...bill, isCurrent: false };
+        const store = esc(settings.storeName || "Green Basket Market");
+        $("receiptContent").innerHTML = `
+          <div class="receipt-head"><h2>${store}</h2><p>SMART TROLLEY SYSTEM</p><p>Thank you for shopping with us</p></div>
+          <div class="receipt-meta"><span>Bill: <strong>${esc(bill.id)}</strong></span><span>${esc(new Date(bill.date).toLocaleString())}</span></div>
+          <table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${(bill.items || []).map(item => `<tr><td>${esc(item.name)}${item.brand ? `<br>${esc(item.brand)}` : ""}${item.weight ? `<br>${esc(item.weight)}` : ""}</td><td>${Number(item.quantity)}</td><td>${money(item.price)}</td><td>${money(item.price * item.quantity)}</td></tr>`).join("")}</tbody></table>
+          <div class="total-row" style="margin-top:11px"><span>Subtotal</span><strong>${money(bill.subtotal ?? bill.total)}</strong></div>
+          <div class="total-row"><span>Discount${bill.discountRate ? ` (${Number(bill.discountRate)}%)` : ""}</span><strong>−${money(bill.discount || 0)}</strong></div>
+          <div class="total-row"><span>GST${bill.gstRate ? ` (${Number(bill.gstRate)}%)` : ""}</span><strong>${money(bill.gst || 0)}</strong></div>
+          <div class="receipt-total"><span>Final amount</span><span>${money(bill.total)}</span></div>
+          <div class="receipt-actions"><button class="button" id="printReceipt">Print</button><button class="button" id="closeReceipt">Close</button>${current ? `<button class="button primary" id="doneReceipt">Done and clear</button>` : ""}</div>`;
+        $("receiptModal").classList.add("open");
+        $("printReceipt").onclick = () => window.print();
+        $("closeReceipt").onclick = closeReceipt;
+        if (current) $("doneReceipt").onclick = completeBill;
+      }
+      function closeReceipt() { $("receiptModal").classList.remove("open"); activeReceiptBill = null; }
+      function completeBill() {
+        if (!activeReceiptBill?.isCurrent) return;
+        const bill = { id: activeReceiptBill.id, date: activeReceiptBill.date, items: activeReceiptBill.items, subtotal: activeReceiptBill.subtotal, discount: activeReceiptBill.discount, discountRate: activeReceiptBill.discountRate, gst: activeReceiptBill.gst, gstRate: activeReceiptBill.gstRate, total: activeReceiptBill.total };
+        sales.unshift(bill);
+        persistSales();
+        for (const item of bill.items) {
+          const p = productById(item.id);
+          if (p) p.stock = Math.max(0, p.stock - item.quantity);
+        }
+        persistProducts();
+        cart = {};
+        closeReceipt();
+        renderAll();
+        logEvent(`Bill ${bill.id} completed for ${money(bill.total)}.`, "Demo");
+        toast("Bill complete — stock updated");
+        confetti();
+      }
+      function confetti() {
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        const colors = ["#22a45b", "#9bdc68", "#ffcb62", "#60b9ea", "#ef7a6c"];
+        for (let i = 0; i < 54; i++) {
+          const piece = document.createElement("i");
+          piece.className = "confetti-piece";
+          piece.style.background = colors[i % colors.length];
+          piece.style.setProperty("--x", `${Math.random() * 520 - 260}px`);
+          piece.style.setProperty("--y", `${Math.random() * 450 - 150}px`);
+          piece.style.setProperty("--r", `${Math.random() * 900 - 450}deg`);
+          piece.style.left = `${35 + Math.random() * 30}%`;
+          piece.style.animationDelay = `${Math.random() * .22}s`;
+          document.body.append(piece);
+          setTimeout(() => piece.remove(), 1600);
+        }
+      }
+      function connectSocket() {
+        const address = $("wsAddress").value.trim();
+        if (!/^wss?:\/\/[^\s]+$/i.test(address)) { toast("Enter a valid ws:// or wss:// address.", "warning"); return; }
+        if (location.protocol === "https:" && address.toLowerCase().startsWith("ws://")) { toast("HTTPS pages cannot connect to ws://. Use HTTP or a secure wss:// server.", "warning"); return; }
+        if (socket && socket.readyState !== WebSocket.CLOSED) socket.close();
+        try {
+          socket = new WebSocket(address);
+          updateStatus();
+          logEvent(`Connecting to ${address}.`, "Hardware");
+          socket.addEventListener("open", () => { updateStatus(); logEvent("WebSocket connected to trolley hardware.", "Hardware"); toast("Trolley hardware connected"); });
+          socket.addEventListener("message", event => handleSocketMessage(event.data));
+          socket.addEventListener("error", () => { logEvent("WebSocket connection error.", "Hardware", true); toast("Could not connect to trolley hardware.", "warning"); });
+          socket.addEventListener("close", () => { updateStatus(); logEvent("WebSocket disconnected.", "Hardware"); });
+        } catch (error) {
+          updateStatus();
+          console.error("WebSocket connection failed:", error);
+          logEvent("Could not open WebSocket connection.", "Hardware", true);
+          toast("Could not open WebSocket connection.", "warning");
+        }
+      }
+      function handleSocketMessage(raw) {
+        let payload;
+        try { payload = JSON.parse(raw); }
+        catch (error) { logEvent("Invalid JSON received; message ignored.", "Hardware", true); return; }
+        for (const message of Array.isArray(payload) ? payload : [payload]) handleHardwareEvent(message);
+      }
+      function handleHardwareEvent(message) {
+        if (!message || typeof message !== "object" || Array.isArray(message) || typeof message.productId !== "string" || !message.productId.trim() || !["add", "remove"].includes(message.action)) {
+          logEvent("Invalid hardware event; message ignored.", "Hardware", true); return;
+        }
+        const qty = message.quantity === undefined ? 1 : message.quantity;
+        if (!Number.isInteger(qty) || qty < 1) { logEvent("Invalid hardware quantity; message ignored.", "Hardware", true); return; }
+        let product = productById(message.productId.trim());
+        if (!product) {
+          if (typeof message.productName !== "string" || !message.productName.trim() || !Number.isFinite(Number(message.price)) || Number(message.price) < 0) {
+            logEvent(`Unknown product ${message.productId} is missing a valid name or price; ignored.`, "Hardware", true); return;
+          }
+          const stock = Number.isInteger(message.stock) && message.stock >= 0 ? message.stock : 99;
+          product = { id: message.productId.trim(), name: message.productName.trim().slice(0, 60), price: Number(message.price), stock, emoji: "🛍️" };
+          products.push(product);
+          persistProducts();
+          logEvent(`New product ${product.name} added from hardware data (stock ${stock}).`, "Hardware");
+        }
+        if (message.action === "add") addToCart(product.id, qty, "Hardware", true);
+        else removeFromCart(product.id, qty, "Hardware");
+      }
+      function loadExternalScript(src, ready) {
+        if (ready()) return Promise.resolve();
+        return new Promise((resolve, reject) => {
+          let existing = document.querySelector(`script[src="${src}"]`);
+          if (existing?.dataset.loadFailed === "true") { existing.remove(); existing = null; }
+          const script = existing || document.createElement("script");
+          const onLoad = () => {
+            if (ready()) resolve();
+            else { script.dataset.loadFailed = "true"; reject(new Error("Library loaded but its API was unavailable.")); }
+          };
+          const onError = () => { script.dataset.loadFailed = "true"; reject(new Error(`Could not load ${src}. Check the internet connection or CDN access.`)); };
+          script.addEventListener("load", onLoad, { once: true });
+          script.addEventListener("error", onError, { once: true });
+          if (!existing) { script.src = src; script.async = true; document.head.append(script); }
+        });
+      }
+      function updateModelStatus() {
+        const status = $("aiEngineStatus");
+        if (!settings.modelEndpoint) {
+          status.textContent = "Custom product model required";
+          status.className = "ai-status error";
+          return false;
+        }
+        status.textContent = "Product model configured · checking";
+        status.className = "ai-status busy";
+        return true;
+      }
+      async function loadOcrWorker() {
+        if (ocrWorker) return ocrWorker;
+        await loadExternalScript("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js", () => !!window.Tesseract);
+        ocrWorker = await window.Tesseract.createWorker("eng");
+        return ocrWorker;
+      }
+      function setTrackingStatus(text, kind = "") {
+        const status = $("trackingStatus");
+        status.textContent = text;
+        status.className = "ai-status" + (kind ? ` ${kind}` : "");
+      }
+      let cameraRetryDelay = 2000;
+      function startCamera(isReconnect = false) {
+        if (cameraRunning || cameraStream) return;
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setTrackingStatus("Camera unavailable", "error");
+          $("cameraPlaceholder").querySelector("strong").textContent = "Camera unavailable";
+          $("cameraPlaceholder").querySelector("small").textContent = "Camera access requires a supported browser and localhost or HTTPS.";
+          $("aiNotice").textContent = "This browser cannot access a camera. Open the dashboard in a camera-capable browser using localhost or HTTPS.";
+          return;
+        }
+        cameraRunning = true;
+        setTrackingStatus(isReconnect ? "Reconnecting camera…" : "Requesting camera permission…", "busy");
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false })
+          .then(async stream => {
+            if (!cameraRunning) { stream.getTracks().forEach(track => track.stop()); return; }
+            cameraPermissionDenied = false;
+            cameraStream = stream;
+            cameraRetryDelay = 2000;
+            $("cameraVideo").srcObject = stream;
+            await $("cameraVideo").play();
+            $("cameraPlaceholder").classList.add("hidden");
+            const videoTrack = stream.getVideoTracks()[0];
+            videoTrack.addEventListener("ended", handleCameraDisconnect, { once: true });
+            if (window.BarcodeDetector) {
+              try { barcodeDetector = new BarcodeDetector(); }
+              catch (error) { barcodeDetector = null; console.warn("Barcode scanner unavailable:", error); }
+            }
+            if (settings.modelEndpoint) {
+              setTrackingStatus("Camera live · checking product model", "busy");
+              $("aiNotice").textContent = `Camera inference sends trolley-zone image crops to the configured endpoint. OCR runs in this browser. ${barcodeDetector ? "Barcode scanning is available." : "This browser lacks BarcodeDetector; use product-model labels or OCR."} Unknown classes never change the cart.`;
+            } else {
+              setTrackingStatus("Camera live · product model required", "error");
+              $("aiNotice").textContent = `Camera is live, but automatic product detection is unavailable until a custom-trained product model endpoint is configured in Admin. Generic object detection is intentionally disabled. ${barcodeDetector ? "Barcode scanning is available once a product is tracked." : "This browser lacks BarcodeDetector."}`;
+            }
+            renderTrackingFrame();
+          })
+          .catch(error => {
+            cameraRunning = false;
+            if (cameraStream) cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+            $("cameraVideo").srcObject = null;
+            setTrackingStatus("Camera permission required", "error");
+            $("cameraPlaceholder").classList.remove("hidden");
+            $("cameraPlaceholder").querySelector("strong").textContent = error.name === "NotAllowedError" ? "Camera permission denied" : "Camera unavailable";
+            $("cameraPlaceholder").querySelector("small").textContent = error.name === "NotAllowedError" ? "Allow camera access in your browser’s site settings, then reload this page." : `Camera could not start: ${error.message}`;
+            cameraPermissionDenied = error.name === "NotAllowedError" || error.name === "SecurityError";
+            $("aiNotice").textContent = `Could not open the camera: ${error.message}. Check camera permission, use a camera-capable browser, and serve this page from localhost or HTTPS.`;
+            console.error("Camera access failed:", error);
+            if (error.name !== "NotAllowedError" && isReconnect) scheduleCameraReconnect();
+          });
+      }
+      function handleCameraDisconnect() {
+        if (!cameraRunning) return;
+        cameraRunning = false;
+        frameRequestController?.abort();
+        clearTimeout(cameraFrameTimer);
+        cameraStream = null;
+        $("cameraVideo").srcObject = null;
+        $("cameraPlaceholder").classList.remove("hidden");
+        $("cameraPlaceholder").querySelector("strong").textContent = "Camera disconnected";
+        $("cameraPlaceholder").querySelector("small").textContent = "Reconnecting automatically…";
+        setTrackingStatus("Camera disconnected · reconnecting", "busy");
+        scheduleCameraReconnect();
+      }
+      function scheduleCameraReconnect() {
+        clearTimeout(cameraRetryTimer);
+        const delay = cameraRetryDelay;
+        cameraRetryDelay = Math.min(15000, Math.round(cameraRetryDelay * 1.8));
+        cameraRetryTimer = setTimeout(() => startCamera(true), delay);
+      }
+      function clearCameraOverlay() {
+        const canvas = $("cameraOverlay");
+        const context = canvas.getContext("2d");
+        context.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      function cameraZone(videoWidth, videoHeight) {
+        return {
+          left: Math.round(videoWidth * settings.zoneLeft / 100),
+          top: Math.round(videoHeight * settings.zoneTop / 100),
+          right: Math.round(videoWidth * settings.zoneRight / 100),
+          bottom: Math.round(videoHeight * settings.zoneBottom / 100)
+        };
+      }
+      function predictionInsideZone(box, zone) {
+        const centerX = box[0] + box[2] / 2;
+        const centerY = box[1] + box[3] / 2;
+        return centerX >= zone.left && centerX <= zone.right && centerY >= zone.top && centerY <= zone.bottom;
+      }
+      function validInferenceEndpointFor(value = settings.modelEndpoint) {
+        try {
+          if (!value) return true;
+          const endpoint = new URL(value);
+          return !endpoint.searchParams.has("api_key") && (endpoint.protocol === "https:" || endpoint.hostname === "localhost" || endpoint.hostname === "127.0.0.1");
+        } catch { return false; }
+      }
+      function isExcludedModelClass(value) {
+        const label = String(value || "").toLocaleLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+        return /(^| )(person|people|human|hand|hands|face|faces|wall|walls|table|tables|chair|chairs|floor|ceiling|shadow|shadows|reflection|reflections|background)( |$)/.test(label);
+      }
+      async function inferProductFrame(video) {
+        if (!settings.modelEndpoint) throw new Error("Custom-trained product model URL is not configured in Admin.");
+        if (!validInferenceEndpointFor()) throw new Error("Model URL must use HTTPS (or localhost during development).");
+        const zone = cameraZone(video.videoWidth, video.videoHeight);
+        const sourceWidth = zone.right - zone.left, sourceHeight = zone.bottom - zone.top;
+        if (sourceWidth <= 0 || sourceHeight <= 0) throw new Error("Trolley zone is invalid. Adjust its boundaries in Admin.");
+        const scale = Math.min(1, 640 / Math.max(sourceWidth, sourceHeight));
+        const frame = document.createElement("canvas");
+        frame.width = Math.max(1, Math.round(sourceWidth * scale));
+        frame.height = Math.max(1, Math.round(sourceHeight * scale));
+        frame.getContext("2d").drawImage(video, zone.left, zone.top, sourceWidth, sourceHeight, 0, 0, frame.width, frame.height);
+        const blob = await new Promise(resolve => frame.toBlob(resolve, "image/jpeg", .72));
+        if (!blob) throw new Error("Could not encode the trolley camera frame.");
+        const endpoint = new URL(settings.modelEndpoint);
+        endpoint.searchParams.set("confidence", String(settings.modelConfidence));
+        endpoint.searchParams.set("overlap", "35");
+        if (modelApiKey) endpoint.searchParams.set("api_key", modelApiKey);
+        frameRequestController = new AbortController();
+        const timeout = setTimeout(() => frameRequestController?.abort(), 12000);
+        try {
+          const form = new FormData();
+          form.append("file", blob, "trolley-zone.jpg");
+          const response = await fetch(endpoint, { method: "POST", body: form, signal: frameRequestController.signal, cache: "no-store" });
+          if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? "Model rejected the API key. Check your model configuration in Admin." : `Model endpoint returned HTTP ${response.status}.`);
+          const result = await response.json();
+          if (!result || !Array.isArray(result.predictions)) throw new Error("Model response must contain a predictions array.");
+          return result.predictions.map(prediction => {
+            const x = Number(prediction.x), y = Number(prediction.y);
+            const width = Number(prediction.width), height = Number(prediction.height);
+            const confidence = Number(prediction.confidence);
+            if (![x, y, width, height, confidence].every(Number.isFinite) || width <= 0 || height <= 0 || typeof prediction.class !== "string") return null;
+            const box = [
+              zone.left + (x - width / 2) / scale,
+              zone.top + (y - height / 2) / scale,
+              width / scale,
+              height / scale
+            ];
+            return { class: prediction.class.trim(), score: confidence, bbox: box };
+          }).filter(prediction => prediction && prediction.class && !isExcludedModelClass(prediction.class) && prediction.score >= settings.modelConfidence / 100 && predictionInsideZone(prediction.bbox, zone));
+        } finally {
+          clearTimeout(timeout);
+          frameRequestController = null;
+        }
+      }
+      function modelProductForClass(className) {
+        const normalize = value => String(value || "").toLocaleLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+        const label = normalize(className);
+        const matches = products.filter(product => normalize(product.modelClass) && normalize(product.modelClass) === label);
+        return matches.length === 1 ? matches[0] : null;
+      }
+      function intersectionOverUnion(a, b) {
+        const left = Math.max(a[0], b[0]), top = Math.max(a[1], b[1]);
+        const right = Math.min(a[0] + a[2], b[0] + b[2]), bottom = Math.min(a[1] + a[3], b[1] + b[3]);
+        const intersection = Math.max(0, right - left) * Math.max(0, bottom - top);
+        const union = a[2] * a[3] + b[2] * b[3] - intersection;
+        return union > 0 ? intersection / union : 0;
+      }
+      function updateTracks(detections) {
+        const matched = new Set();
+        const ordered = [...detections].sort((a, b) => b.score - a.score);
+        for (const detection of ordered) {
+          let best = null, bestScore = 0;
+          for (const track of tracks) {
+            if (matched.has(track) || track.className !== detection.class) continue;
+            const overlap = intersectionOverUnion(track.box, detection.bbox);
+            const oldCenter = [track.box[0] + track.box[2] / 2, track.box[1] + track.box[3] / 2];
+            const newCenter = [detection.bbox[0] + detection.bbox[2] / 2, detection.bbox[1] + detection.bbox[3] / 2];
+            const diagonal = Math.max(1, Math.hypot(track.box[2], track.box[3]));
+            const distance = Math.hypot(oldCenter[0] - newCenter[0], oldCenter[1] - newCenter[1]) / diagonal;
+            const score = overlap >= .15 ? overlap : distance <= .55 ? .15 + (1 - distance / .55) * .2 : 0;
+            if (score > bestScore) { best = track; bestScore = score; }
+          }
+          if (!best) {
+            best = { id: nextTrackId++, className: detection.class, box: detection.bbox, score: detection.score, stableFrames: 1, missed: 0, productId: null, added: false, lastOcrAt: 0, labelText: "", matchMethod: "", status: "tracking" };
+            tracks.push(best);
+            logEvent(`Camera track #${best.id}: ${detection.class} entered view.`, "Camera");
+          } else {
+            best.box = detection.bbox;
+            best.score = detection.score;
+            best.stableFrames++;
+            best.missed = 0;
+          }
+          matched.add(best);
+          const classProduct = modelProductForClass(detection.class);
+          if (classProduct) setTrackProduct(best, classProduct, "custom product model");
+        }
+        const expired = [];
+        for (const track of tracks) {
+          if (!matched.has(track)) track.missed++;
+          if (track.missed >= 8) expired.push(track);
+        }
+        for (const track of expired) {
+          tracks = tracks.filter(item => item !== track);
+          logEvent(`Camera track #${track.id} confirmed outside trolley view.`, "Camera");
+          if (track.added && track.productId) removeFromCart(track.productId, 1, "Camera");
+        }
+        $("detectedObjectCount").textContent = String(matched.size);
+        renderTracks();
+      }
+      function drawDetections(video) {
+        const canvas = $("cameraOverlay");
+        const width = video.videoWidth, height = video.videoHeight;
+        const viewWidth = $("cameraView").clientWidth, viewHeight = $("cameraView").clientHeight;
+        if (!width || !height || !viewWidth || !viewHeight) return;
+        if (canvas.width !== viewWidth || canvas.height !== viewHeight) { canvas.width = viewWidth; canvas.height = viewHeight; }
+        const context = canvas.getContext("2d");
+        context.clearRect(0, 0, viewWidth, viewHeight);
+        const scale = Math.min(viewWidth / width, viewHeight / height);
+        const offsetX = (viewWidth - width * scale) / 2, offsetY = (viewHeight - height * scale) / 2;
+        const zone = cameraZone(width, height);
+        context.save();
+        context.setLineDash([8, 5]);
+        context.strokeStyle = "#59a9ff";
+        context.lineWidth = 2;
+        context.strokeRect(offsetX + zone.left * scale, offsetY + zone.top * scale, (zone.right - zone.left) * scale, (zone.bottom - zone.top) * scale);
+        context.fillStyle = "#59a9ff";
+        context.font = "bold 12px Inter, sans-serif";
+        context.fillText("TROLLEY DETECTION ZONE", offsetX + zone.left * scale + 6, Math.max(14, offsetY + zone.top * scale + 15));
+        context.restore();
+        for (const track of tracks) {
+          if (track.missed > 0) continue;
+          const [x, y, w, h] = track.box;
+          const color = track.status === "recognized" ? "#42dc82" : track.status === "scanning" ? "#ffc34d" : track.status === "unknown" ? "#ff6565" : "#59a9ff";
+          context.strokeStyle = color;
+          context.lineWidth = 2;
+          context.strokeRect(offsetX + x * scale, offsetY + y * scale, w * scale, h * scale);
+          const product = track.productId ? productById(track.productId) : null;
+          const label = `${product ? product.name : track.status === "unknown" ? "Unknown Product" : track.className} · ${Math.round(track.score * 100)}%`;
+          context.font = "bold 13px Inter, sans-serif";
+          const textWidth = context.measureText(label).width;
+          const labelX = offsetX + x * scale, labelY = Math.max(0, offsetY + y * scale - 25);
+          context.fillStyle = color;
+          context.fillRect(labelX, labelY, textWidth + 12, 23);
+          context.fillStyle = "#102018";
+          context.fillText(label, labelX + 6, labelY + 16);
+        }
+      }
+      async function runBarcodeScan() {
+        if (!barcodeDetector || !cameraRunning || Date.now() - lastBarcodeScan < 1200) return;
+        lastBarcodeScan = Date.now();
+        try {
+          const video = $("cameraVideo");
+          const zone = cameraZone(video.videoWidth, video.videoHeight);
+          const crop = document.createElement("canvas");
+          crop.width = zone.right - zone.left;
+          crop.height = zone.bottom - zone.top;
+          crop.getContext("2d").drawImage(video, zone.left, zone.top, crop.width, crop.height, 0, 0, crop.width, crop.height);
+          const codes = await barcodeDetector.detect(crop);
+          for (const code of codes) {
+            const codeValue = String(code.rawValue || "").trim();
+            if (!codeValue) continue;
+            const product = products.find(item => item.barcode && item.barcode.trim() === codeValue);
+            const box = code.boundingBox;
+            const track = box ? tracks.filter(item => item.missed === 0).sort((a, b) => {
+              const center = [box.x + box.width / 2 + zone.left, box.y + box.height / 2 + zone.top];
+              const da = Math.hypot(a.box[0] + a.box[2] / 2 - center[0], a.box[1] + a.box[3] / 2 - center[1]);
+              const db = Math.hypot(b.box[0] + b.box[2] / 2 - center[0], b.box[1] + b.box[3] / 2 - center[1]);
+              return da - db;
+            })[0] : tracks.find(item => item.missed === 0);
+            if (!track) continue;
+            track.labelText = `Barcode ${codeValue}`;
+            if (product) setTrackProduct(track, product, "barcode");
+            else { track.status = "unknown"; track.matchMethod = `Unmatched barcode ${codeValue}`; renderTracks(); }
+          }
+        } catch (error) { console.warn("Barcode scan failed for this frame:", error); }
+      }
+      function matchOcrText(text) {
+        const normalized = String(text).toLocaleLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+        if (!normalized) return null;
+        const includesLabel = value => {
+          const target = String(value || "").toLocaleLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+          return target.length >= 3 && (` ${normalized} `).includes(` ${target} `);
+        };
+        const nameMatches = products.filter(product => includesLabel(product.name));
+        if (nameMatches.length === 1) return nameMatches[0];
+        if (nameMatches.length > 1) return null;
+        const brandAndWeightMatches = products.filter(product => product.brand && product.weight && includesLabel(product.brand) && includesLabel(product.weight));
+        return brandAndWeightMatches.length === 1 ? brandAndWeightMatches[0] : null;
+      }
+      function setTrackProduct(track, product, method) {
+        if (track.productId && track.productId !== product.id && track.matchMethod === "barcode" && method !== "barcode") return;
+        if (track.productId && track.productId !== product.id) {
+          if (track.added) removeFromCart(track.productId, 1, "Camera");
+          track.added = false;
+          track.addAttempted = false;
+        }
+        track.productId = product.id;
+        track.matchMethod = method;
+        track.status = "recognized";
+        track.labelText = track.labelText || product.name;
+        if (!track.added && !track.addAttempted && track.stableFrames >= 3 && track.missed === 0) {
+          track.addAttempted = true;
+          track.added = addToCart(product.id, 1, method === "manual selection" ? "Camera (Manual)" : "Camera", false);
+          if (track.added) logEvent(`${product.name} identified by ${method} and added (track #${track.id}).`, "Camera");
+        }
+        renderTracks();
+      }
+      async function scanTrackLabel(track) {
+        if (ocrBusy || track.missed || track.productId && track.added || Date.now() - track.lastOcrAt < 2800) return;
+        track.lastOcrAt = Date.now();
+        track.status = "scanning";
+        renderTracks();
+        ocrBusy = true;
+        try {
+          const worker = await loadOcrWorker();
+          if (!cameraRunning || track.missed) return;
+          const video = $("cameraVideo");
+          const [x, y, w, h] = track.box;
+          const crop = document.createElement("canvas");
+          crop.width = Math.max(1, Math.round(w));
+          crop.height = Math.max(1, Math.round(h));
+          crop.getContext("2d").drawImage(video, x, y, w, h, 0, 0, crop.width, crop.height);
+          const result = await worker.recognize(crop);
+          if (!cameraRunning || !tracks.includes(track) || track.missed) return;
+          track.labelText = String(result.data.text || "").trim().slice(0, 140);
+          const match = matchOcrText(track.labelText);
+          if (match) setTrackProduct(track, match, "OCR label");
+          else { track.status = "unknown"; track.matchMethod = "No database label match"; renderTracks(); }
+        } catch (error) {
+          track.status = "unknown";
+          track.matchMethod = "OCR unavailable";
+          $("aiNotice").textContent = `OCR could not load or read a label: ${error.message}. Barcode matching and manual product confirmation remain available.`;
+          console.error("Product label OCR failed:", error);
+          renderTracks();
+        } finally { ocrBusy = false; }
+      }
+      async function renderTrackingFrame() {
+        if (!cameraRunning || cameraFrameBusy) return;
+        const video = $("cameraVideo");
+        if (video.readyState < 2) { cameraFrameTimer = setTimeout(renderTrackingFrame, 400); return; }
+        if (!settings.modelEndpoint) {
+          drawDetections(video);
+          renderTracks();
+          $("aiEngineStatus").textContent = "Custom product model required";
+          $("aiEngineStatus").className = "ai-status error";
+          $("labelStatus").textContent = "Model required";
+          cameraFrameTimer = setTimeout(renderTrackingFrame, 1500);
+          return;
+        }
+        cameraFrameBusy = true;
+        try {
+          const detections = await inferProductFrame(video);
+          if (!cameraRunning) return;
+          inferenceErrors = 0;
+          $("aiEngineStatus").textContent = "Product model live";
+          $("aiEngineStatus").className = "ai-status ready";
+          setTrackingStatus("Camera and product model live", "ready");
+          updateTracks(detections);
+          drawDetections(video);
+          await runBarcodeScan();
+          const needsOcr = tracks.find(track => track.missed === 0 && !track.added && Date.now() - track.lastOcrAt >= 2800);
+          if (needsOcr) scanTrackLabel(needsOcr);
+          $("trackedProductCount").textContent = String(cartTotals().quantity);
+          $("labelStatus").textContent = tracks.some(track => track.status === "scanning") ? "Scanning" : tracks.some(track => track.status === "recognized") ? "Matched" : tracks.some(track => track.status === "unknown") ? "Needs match" : "Waiting";
+        } catch (error) {
+          inferenceErrors++;
+          $("aiEngineStatus").textContent = inferenceErrors > 1 ? "Product model unavailable" : "Checking product model";
+          $("aiEngineStatus").className = "ai-status error";
+          setTrackingStatus("Product detection unavailable", "error");
+          $("aiNotice").textContent = `Product detection is not running: ${error.message}. Existing tracks are retained during inference errors; no cart changes are made. Check model URL, CORS, network access, and credentials in Admin.`;
+          if (inferenceErrors === 1) console.error("Product model inference failed:", error);
+          drawDetections(video);
+        } finally { cameraFrameBusy = false; }
+        if (cameraRunning) cameraFrameTimer = setTimeout(renderTrackingFrame, inferenceErrors ? Math.min(8000, 1500 * inferenceErrors) : 900);
+      }
+      function renderTracks() {
+        const list = $("trackList");
+        const visibleTracks = tracks.filter(track => track.missed < 8);
+        if (!visibleTracks.length) {
+          list.innerHTML = `<div class="empty-state" style="padding:18px">${cameraRunning ? settings.modelEndpoint ? "No products detected inside the trolley zone." : "Camera is monitoring; configure a custom product model in Admin to enable detections." : "Camera is waiting for permission."}</div>`;
+          return;
+        }
+        const selectedProducts = new Map([...list.querySelectorAll("[data-track-product]")].map(select => [select.dataset.trackProduct, select.value]));
+        list.innerHTML = visibleTracks.map(track => {
+          const product = track.productId ? productById(track.productId) : null;
+          const name = product ? product.name : track.status === "unknown" ? "Unknown Product" : track.className;
+          const details = [`Track #${track.id}`, `${Math.round(track.box[2])} × ${Math.round(track.box[3])} px`, `Object confidence ${Math.round(track.score * 100)}%`, track.matchMethod || "Tracking appearance and position", track.labelText ? `Label: ${track.labelText}` : ""].filter(Boolean).join(" · ");
+          const options = products.map(item => `<option value="${esc(item.id)}" ${track.productId === item.id ? "selected" : ""}>${esc(item.name)} · ${esc(item.id)}</option>`).join("");
+          const statusText = track.status === "recognized" ? "Product recognized" : track.status === "scanning" ? "Scanning label…" : track.status === "unknown" ? "Not recognized" : "Tracking object";
+          return `<article class="track-card ${track.status}" data-track-id="${track.id}"><div class="track-head"><span class="track-name">${esc(name)}</span><span class="track-state">${esc(statusText)}</span></div><div class="track-details">${esc(details)}</div>${!track.added ? `<div class="track-actions"><select class="input" data-track-product="${track.id}" aria-label="Select product for track ${track.id}"><option value="">Select product…</option>${options}</select><button class="button small primary" data-confirm-track="${track.id}">Confirm & add</button></div>` : `<div class="track-details">Added once · remove from view for 8 consecutive checks to confirm departure</div>`}</article>`;
+        }).join("");
+        for (const select of list.querySelectorAll("[data-track-product]")) {
+          const previous = selectedProducts.get(select.dataset.trackProduct);
+          if (previous && productById(previous)) select.value = previous;
+        }
+      }
+      function manuallyConfirmTrack(trackId) {
+        const track = tracks.find(item => item.id === Number(trackId));
+        const select = document.querySelector(`[data-track-product="${CSS.escape(String(trackId))}"]`);
+        const product = select && productById(select.value);
+        if (!track || !product) { toast("Select a product before confirming this object.", "warning"); return; }
+        track.stableFrames = Math.max(track.stableFrames, 3);
+        track.addAttempted = false;
+        setTrackProduct(track, product, "manual selection");
+      }
+      function renderAdmin() {
+        if (!adminUnlocked) return;
+        const revenue = sales.reduce((sum, bill) => sum + (Number(bill.total) || 0), 0);
+        const itemsSold = sales.reduce((sum, bill) => sum + (bill.items || []).reduce((n, item) => n + (Number(item.quantity) || 0), 0), 0);
+        $("adminRevenue").textContent = money(revenue);
+        $("adminBills").textContent = sales.length;
+        $("adminItemsSold").textContent = itemsSold;
+        const lowProducts = products.filter(p => p.stock <= settings.lowStock);
+        $("adminLowCount").textContent = lowProducts.length;
+        renderRevenueChart();
+        renderTopProducts();
+        renderSales();
+        renderInventory();
+        renderAlerts();
+        renderLiveCart();
+        $("storeName").value = settings.storeName;
+        $("lowStockLevel").value = settings.lowStock;
+        $("discountRate").value = settings.discountRate;
+        $("gstRate").value = settings.gstRate;
+        $("modelEndpoint").value = settings.modelEndpoint;
+        $("modelConfidence").value = settings.modelConfidence;
+        $("zoneLeft").value = settings.zoneLeft;
+        $("zoneTop").value = settings.zoneTop;
+        $("zoneRight").value = settings.zoneRight;
+        $("zoneBottom").value = settings.zoneBottom;
+      }
+      function renderRevenueChart() {
+        const days = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - i);
+          const key = d.toLocaleDateString();
+          const amount = sales.filter(b => new Date(b.date).toLocaleDateString() === key).reduce((sum, b) => sum + Number(b.total || 0), 0);
+          days.push({ label: d.toLocaleDateString([], { weekday: "short" }), amount });
+        }
+        const max = Math.max(1, ...days.map(d => d.amount));
+        $("revenueChart").innerHTML = days.map(d => `<div class="bar-wrap"><div class="bar-value">${d.amount ? esc(money(d.amount).replace(".00", "")) : ""}</div><div class="bar" style="height:${Math.max(3, d.amount / max * 100)}%"></div><div class="bar-label">${esc(d.label)}</div></div>`).join("");
+      }
+      function renderTopProducts() {
+        const counts = {};
+        for (const bill of sales) for (const item of bill.items || []) counts[item.name] = (counts[item.name] || 0) + Number(item.quantity || 0);
+        const top = Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, 6);
+        const max = Math.max(1, ...top.map(x => x[1]));
+        $("topProducts").innerHTML = top.length ? top.map(([name, count]) => `<div class="top-product"><span>${esc(name)}</span><div class="progress"><span style="width:${count / max * 100}%"></span></div><strong>${count}</strong></div>`).join("") : `<div class="empty-state">Completed sales will appear here.</div>`;
+      }
+      function renderSales() {
+        $("salesHistory").innerHTML = sales.slice(0, 15).map(bill => {
+          const qty = (bill.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+          return `<tr><td>${esc(bill.id)}</td><td>${esc(new Date(bill.date).toLocaleDateString())}</td><td>${(bill.items || []).length}</td><td>${qty}</td><td>${money(bill.total)}</td><td><button class="button small" data-view-bill="${esc(bill.id)}">View</button></td></tr>`;
+        }).join("") || `<tr><td colspan="6" style="color:var(--muted)">No completed bills yet.</td></tr>`;
+      }
+      function stockStatus(stock) { return stock === 0 ? ["Out of stock", "out"] : stock <= settings.lowStock ? ["Low stock", "low"] : ["In stock", ""]; }
+      function renderInventory() {
+        $("inventoryCount").textContent = `${products.length} products`;
+        $("inventoryTable").innerHTML = products.map(p => {
+          const [label, cls] = stockStatus(p.stock);
+          return `<tr><td><strong>${esc(p.emoji || "🛍️")} ${esc(p.name)}</strong><div class="product-meta">${esc(p.id)}${p.brand ? ` · ${esc(p.brand)}` : ""}${p.modelClass ? ` · AI: ${esc(p.modelClass)}` : ""}${p.weight ? ` · ${esc(p.weight)}` : ""}${p.category ? ` · ${esc(p.category)}` : ""}</div></td><td>${money(p.price)}</td><td><input class="stock-input" type="number" min="0" step="1" value="${p.stock}" data-stock-id="${esc(p.id)}" aria-label="Stock for ${esc(p.name)}"></td><td><span class="badge ${cls}">${label}</span></td><td><div class="inline-controls"><button class="button small soft" data-add-to-cart="${esc(p.id)}" ${p.stock - (cart[p.id] || 0) <= 0 ? "disabled" : ""}>Add to trolley</button><button class="button small" data-edit="${esc(p.id)}">Edit</button><button class="button small danger" data-delete="${esc(p.id)}" data-confirm="false">Delete</button></div></td></tr>`;
+        }).join("");
+      }
+      function renderAlerts() {
+        const low = products.filter(p => p.stock <= settings.lowStock);
+        $("stockAlerts").innerHTML = low.length ? low.map(p => `<div class="alert-row"><div><strong>${esc(p.name)}</strong><div class="product-meta">${esc(p.id)} · ${p.stock} remaining</div></div><button class="button small soft" data-restock="${esc(p.id)}">+10 Restock</button></div>`).join("") : `<div class="empty-state">All products are above the low-stock level.</div>`;
+      }
+      function renderAll() {
+        updateStatus();
+        renderCart();
+        renderEvents();
+        if (adminUnlocked) renderAdmin();
+      }
+      function switchPage(page) {
+        document.querySelectorAll(".page").forEach(section => section.classList.remove("active"));
+        $(page + "Page").classList.add("active");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        if (page === "admin") {
+          $("adminLock").classList.toggle("hidden", adminUnlocked);
+          $("adminContent").classList.toggle("hidden", !adminUnlocked);
+          if (adminUnlocked) renderAdmin();
+        }
+      }
+      function secretClick(key, page) {
+        const now = Date.now();
+        secretClicks[key] = secretClicks[key].filter(time => now - time < 1500);
+        secretClicks[key].push(now);
+        if (secretClicks[key].length >= 4) { secretClicks[key] = []; switchPage(page); }
+      }
+      function resetProductForm() {
+        editingId = null; pendingPhoto = "";
+        $("productForm").reset();
+        $("productEmoji").value = "🛍️";
+        $("productId").disabled = false;
+        $("productFormTitle").textContent = "Add a product";
+        $("saveProduct").textContent = "Save product";
+        $("cancelEdit").classList.add("hidden");
+      }
+      function editProduct(id) {
+        const p = productById(id);
+        if (!p) return;
+        editingId = p.id; pendingPhoto = p.image || "";
+        $("productId").value = p.id; $("productId").disabled = true;
+        $("productName").value = p.name; $("productBrand").value = p.brand || ""; $("productModelClass").value = p.modelClass || ""; $("productBarcode").value = p.barcode || "";
+        $("productWeight").value = p.weight || ""; $("productCategory").value = p.category || "";
+        $("productPrice").value = p.price; $("productStock").value = p.stock; $("productEmoji").value = p.emoji || "🛍️";
+        $("productFormTitle").textContent = `Edit ${p.name}`;
+        $("saveProduct").textContent = "Update product";
+        $("cancelEdit").classList.remove("hidden");
+        $("productForm").scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      function downloadFile(name, content, type) {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url; link.download = name; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      function csvCell(value) { return `"${String(value ?? "").replace(/"/g, '""')}"`; }
+
+      $("themeToggle").addEventListener("click", () => {
+        const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+        document.documentElement.dataset.theme = next;
+        $("themeToggle").textContent = next === "dark" ? "☀" : "☾";
+        safeWrite(STORAGE.theme, next);
+      });
+      const savedTheme = safeRead(STORAGE.theme, "light");
+      document.documentElement.dataset.theme = savedTheme === "dark" ? "dark" : "light";
+      $("themeToggle").textContent = savedTheme === "dark" ? "☀" : "☾";
+      $("secretHardware").addEventListener("click", () => secretClick("hardware", "hardware"));
+      $("secretAdmin").addEventListener("click", () => secretClick("admin", "admin"));
+      document.querySelectorAll("[data-go]").forEach(button => button.addEventListener("click", () => switchPage(button.dataset.go)));
+      $("demoToggleHardware").addEventListener("change", event => { demoMode = event.target.checked; updateStatus(); logEvent(`Demo Mode ${demoMode ? "enabled" : "disabled"}.`, "Demo"); });
+      $("trackList").addEventListener("click", event => {
+        const button = event.target.closest("[data-confirm-track]");
+        if (button) manuallyConfirmTrack(button.dataset.confirmTrack);
+      });
+      $("cartList").addEventListener("click", event => {
+        const button = event.target.closest("[data-cart-action]");
+        if (!button) return;
+        button.dataset.cartAction === "add" ? addToCart(button.dataset.id, 1, socket?.readyState === WebSocket.OPEN ? "Hardware" : "Demo") : removeFromCart(button.dataset.id, 1, socket?.readyState === WebSocket.OPEN ? "Hardware" : "Demo");
+      });
+      $("clearCart").addEventListener("click", clearCurrentCart);
+      $("generateBill").addEventListener("click", generateBill);
+      $("receiptModal").addEventListener("click", event => { if (event.target === $("receiptModal")) closeReceipt(); });
+      $("connectWs").addEventListener("click", connectSocket);
+      $("disconnectWs").addEventListener("click", () => { if (socket && socket.readyState !== WebSocket.CLOSED) socket.close(); });
+      $("unlockAdmin").addEventListener("click", () => {
+        if ($("pinInput").value === pin) { adminUnlocked = true; $("adminLock").classList.add("hidden"); $("adminContent").classList.remove("hidden"); renderAdmin(); toast("Admin panel unlocked"); }
+        else { toast("Incorrect PIN.", "warning"); logEvent("Incorrect admin PIN attempt.", "Demo", true); }
+        $("pinInput").value = "";
+      });
+      $("pinInput").addEventListener("keydown", event => { if (event.key === "Enter") $("unlockAdmin").click(); });
+      $("lockAdmin").addEventListener("click", () => { adminUnlocked = false; $("adminLock").classList.remove("hidden"); $("adminContent").classList.add("hidden"); toast("Admin panel locked"); });
+      $("productPhoto").addEventListener("change", event => {
+        const file = event.target.files[0];
+        pendingPhoto = "";
+        if (!file) return;
+        if (!file.type.startsWith("image/")) { toast("Choose an image file.", "warning"); event.target.value = ""; return; }
+        if (file.size > 300 * 1024) { toast("Photo must be 300 KB or smaller.", "warning"); event.target.value = ""; return; }
+        const reader = new FileReader();
+        reader.onload = () => { pendingPhoto = String(reader.result || ""); };
+        reader.onerror = () => toast("Could not read that photo.", "warning");
+        reader.readAsDataURL(file);
+      });
+      $("productForm").addEventListener("submit", event => {
+        event.preventDefault();
+        const id = $("productId").value.trim();
+        const name = $("productName").value.trim();
+        const price = Number($("productPrice").value);
+        const stock = Number($("productStock").value);
+        if (!id || !name || !Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0) { toast("Enter a valid ID, name, price and whole-number stock.", "warning"); return; }
+        if (!editingId && productById(id)) { toast("That product ID already exists. Edit the existing product instead.", "warning"); return; }
+        const prior = editingId ? productById(editingId) : null;
+        const product = {
+          id, name, brand: $("productBrand").value.trim(), modelClass: $("productModelClass").value.trim(), barcode: $("productBarcode").value.trim(),
+          weight: $("productWeight").value.trim(), category: $("productCategory").value.trim(),
+          price, stock, emoji: $("productEmoji").value.trim() || "🛍️",
+          ...(pendingPhoto || prior?.image ? { image: pendingPhoto || prior.image } : {})
+        };
+        if (editingId) products = products.map(p => p.id === editingId ? product : p);
+        else products.push(product);
+        persistProducts();
+        resetProductForm(); renderAll(); toast(editingId ? "Product updated" : "Product added");
+      });
+      $("cancelEdit").addEventListener("click", resetProductForm);
+      $("saveSettings").addEventListener("click", () => {
+        const storeName = $("storeName").value.trim();
+        const lowStock = Number($("lowStockLevel").value);
+        const discountRate = Number($("discountRate").value);
+        const gstRate = Number($("gstRate").value);
+        const modelEndpoint = $("modelEndpoint").value.trim();
+        const modelConfidence = Number($("modelConfidence").value);
+        const zoneLeft = Number($("zoneLeft").value);
+        const zoneTop = Number($("zoneTop").value);
+        const zoneRight = Number($("zoneRight").value);
+        const zoneBottom = Number($("zoneBottom").value);
+        const newPin = $("newPin").value.trim();
+        const endpointValid = !modelEndpoint || validInferenceEndpointFor(modelEndpoint);
+        const validZone = [zoneLeft, zoneTop, zoneRight, zoneBottom, modelConfidence].every(Number.isFinite) &&
+          Number.isInteger(zoneLeft) && Number.isInteger(zoneTop) && Number.isInteger(zoneRight) && Number.isInteger(zoneBottom) &&
+          zoneLeft >= 0 && zoneLeft < zoneRight && zoneRight <= 100 && zoneTop >= 0 && zoneTop < zoneBottom && zoneBottom <= 100 &&
+          modelConfidence >= 1 && modelConfidence <= 99;
+        if (!storeName || !Number.isInteger(lowStock) || lowStock < 0 || !Number.isFinite(discountRate) || discountRate < 0 || discountRate > 100 || !Number.isFinite(gstRate) || gstRate < 0 || gstRate > 100 || !validZone || !endpointValid || (newPin && !/^\d{4,8}$/.test(newPin))) {
+          toast("Check store, billing rates, model URL, zone bounds, confidence threshold, and PIN.", "warning"); return;
+        }
+        settings = { storeName, lowStock, discountRate, gstRate, modelEndpoint, modelConfidence, zoneLeft, zoneTop, zoneRight, zoneBottom };
+        const newModelApiKey = $("modelApiKey").value.trim();
+        if (newModelApiKey) modelApiKey = newModelApiKey;
+        $("modelApiKey").value = "";
+        safeWrite(STORAGE.settings, settings);
+        if (newPin) { pin = newPin; safeWrite(STORAGE.pin, pin); $("newPin").value = ""; }
+        updateModelStatus();
+        renderAll();
+        if (cameraRunning) { clearTimeout(cameraFrameTimer); inferenceErrors = 0; renderTrackingFrame(); }
+        toast("Settings saved. Model key is kept in memory only.");
+      });
+      $("inventoryTable").addEventListener("change", event => {
+        const input = event.target.closest("[data-stock-id]");
+        if (!input) return;
+        const stock = Number(input.value);
+        const p = productById(input.dataset.stockId);
+        if (!p || !Number.isInteger(stock) || stock < 0) { toast("Stock must be a whole number of zero or more.", "warning"); renderInventory(); return; }
+        p.stock = stock; persistProducts(); renderAll(); toast(`${p.name} stock updated`);
+      });
+      $("inventoryTable").addEventListener("click", event => {
+        const add = event.target.closest("[data-add-to-cart]");
+        const edit = event.target.closest("[data-edit]");
+        const del = event.target.closest("[data-delete]");
+        if (add) addToCart(add.dataset.addToCart, 1, "Demo (Admin)");
+        if (edit) editProduct(edit.dataset.edit);
+        if (del) {
+          if (del.dataset.confirm !== "true") { del.dataset.confirm = "true"; del.textContent = "Confirm?"; setTimeout(() => { if (del.isConnected) { del.dataset.confirm = "false"; del.textContent = "Delete"; } }, 3000); return; }
+          const id = del.dataset.delete;
+          products = products.filter(p => p.id !== id);
+          if (cart[id]) delete cart[id];
+          persistProducts(); renderAll(); toast("Product deleted", "warning");
+        }
+      });
+      $("stockAlerts").addEventListener("click", event => {
+        const button = event.target.closest("[data-restock]");
+        if (!button) return;
+        const p = productById(button.dataset.restock);
+        if (p) { p.stock += 10; persistProducts(); renderAll(); toast(`${p.name} restocked by 10`); }
+      });
+      $("salesHistory").addEventListener("click", event => {
+        const button = event.target.closest("[data-view-bill]");
+        if (button) { const bill = sales.find(b => b.id === button.dataset.viewBill); if (bill) showReceipt(bill, false); }
+      });
+      $("exportSales").addEventListener("click", () => {
+        const rows = [["Bill number","Date","Product ID","Product","Quantity","Unit price","Line total"]];
+        for (const bill of sales) for (const item of bill.items || []) rows.push([bill.id,bill.date,item.id,item.name,item.quantity,item.price,item.price * item.quantity]);
+        downloadFile("smart-trolley-sales.csv", rows.map(row => row.map(csvCell).join(",")).join("\r\n"), "text/csv;charset=utf-8");
+      });
+      $("exportProducts").addEventListener("click", () => downloadFile("smart-trolley-products.json", JSON.stringify(products, null, 2), "application/json"));
+      $("importProducts").addEventListener("change", async event => {
+        const file = event.target.files[0];
+        if (!file) return;
+        try {
+          const imported = JSON.parse(await file.text());
+          if (!Array.isArray(imported) || !imported.length || !imported.every(validProduct) || new Set(imported.map(p => p.id.toLowerCase())).size !== imported.length) throw new Error("File must contain unique products with valid IDs, names, prices and stock.");
+          products = imported.map(p => ({
+            id: p.id.trim(), name: p.name.trim(), price: Number(p.price), stock: Number(p.stock),
+            brand: typeof p.brand === "string" ? p.brand.slice(0, 60) : "",
+            modelClass: typeof p.modelClass === "string" ? p.modelClass.slice(0, 60) : "",
+            barcode: typeof p.barcode === "string" ? p.barcode.slice(0, 80) : "",
+            weight: typeof p.weight === "string" ? p.weight.slice(0, 30) : "",
+            category: typeof p.category === "string" ? p.category.slice(0, 40) : "",
+            emoji: typeof p.emoji === "string" ? p.emoji : "🛍️",
+            ...(typeof p.image === "string" && p.image.startsWith("data:image/") && p.image.length < 500000 ? { image: p.image } : {})
+          }));
+          persistProducts(); renderAll(); toast("Products imported");
+        } catch (error) { console.error("Product import failed:", error); toast(`Import failed: ${error.message}`, "warning"); }
+        event.target.value = "";
+      });
+      let resetConfirmTimer = null;
+      $("resetProducts").addEventListener("click", event => {
+        const button = event.currentTarget;
+        if (button.dataset.confirm !== "true") {
+          button.dataset.confirm = "true"; button.textContent = "Click again to reset";
+          clearTimeout(resetConfirmTimer);
+          resetConfirmTimer = setTimeout(() => { button.dataset.confirm = "false"; button.textContent = "Reset sample products"; }, 3500);
+          return;
+        }
+        products = sampleProducts.map(p => ({ ...p })); cart = {};
+        persistProducts(); renderAll();
+        button.dataset.confirm = "false"; button.textContent = "Reset sample products";
+        toast("Sample products restored");
+      });
+      let clearConfirmTimer = null;
+      $("clearHistory").addEventListener("click", event => {
+        const button = event.currentTarget;
+        if (button.dataset.confirm !== "true") {
+          button.dataset.confirm = "true"; button.textContent = "Click again to clear";
+          clearTimeout(clearConfirmTimer);
+          clearConfirmTimer = setTimeout(() => { button.dataset.confirm = "false"; button.textContent = "Clear sales history"; }, 3500);
+          return;
+        }
+        sales = []; persistSales(); renderAdmin();
+        button.dataset.confirm = "false"; button.textContent = "Clear sales history";
+        toast("Sales history cleared", "warning");
+      });
+      window.addEventListener("beforeunload", () => {
+        clearTimeout(cameraRetryTimer);
+        clearTimeout(cameraFrameTimer);
+        frameRequestController?.abort();
+        if (cameraStream) cameraStream.getTracks().forEach(track => track.stop());
+        if (socket && socket.readyState < WebSocket.CLOSING) socket.close();
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible" && !cameraPermissionDenied && !cameraStream && !cameraRetryTimer && navigator.mediaDevices?.getUserMedia) startCamera(true);
+      });
+      if (navigator.mediaDevices?.addEventListener) navigator.mediaDevices.addEventListener("devicechange", () => {
+        if (cameraRunning && (!cameraStream || !cameraStream.active)) handleCameraDisconnect();
+      });
+
+      $("pythonExample").textContent = `import asyncio
+import json
+import websockets
+from gpiozero import Button
+
+# A button/sensor wired between GPIO 17 and GND.
+sensor = Button(17, pull_up=True, bounce_time=0.15)
+clients = set()
+
+async def trolley_server(websocket):
+    clients.add(websocket)
+    try:
+        await websocket.wait_closed()
+    finally:
+        clients.discard(websocket)
+
+async def send_milk_event():
+    message = json.dumps({
+        "productId": "P001",
+        "productName": "Milk",
+        "price": 30,
+        "action": "add",
+        "quantity": 1
+    })
+    if clients:
+        await asyncio.gather(
+            *(client.send(message) for client in list(clients)),
+            return_exceptions=True
+        )
+
+async def main():
+    loop = asyncio.get_running_loop()
+    sensor.when_pressed = lambda: asyncio.run_coroutine_threadsafe(
+        send_milk_event(), loop
+    )
+    async with websockets.serve(trolley_server, "0.0.0.0", 8765):
+        print("Trolley WebSocket listening on port 8765")
+        await asyncio.Future()
+
+asyncio.run(main())`;
+      $("espExample").textContent = `#include <WiFi.h>
+#include <WebSocketsClient.h>
+
+const char* WIFI_SSID = "YOUR_WIFI";
+const char* WIFI_PASSWORD = "YOUR_PASSWORD";
+WebSocketsClient webSocket;
+const int SENSOR_PIN = 17;
+bool lastState = HIGH;
+
+void onWebSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
+  if (type == WStype_CONNECTED) Serial.println("Connected to trolley server");
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(SENSOR_PIN, INPUT_PULLUP);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  while (WiFi.status() != WL_CONNECTED) delay(300);
+  // Use the Raspberry Pi's LAN IP address.
+  webSocket.begin("192.168.1.10", 8765, "/");
+  webSocket.onEvent(onWebSocketEvent);
+}
+
+void loop() {
+  webSocket.loop();
+  bool state = digitalRead(SENSOR_PIN);
+  if (lastState == HIGH && state == LOW) {
+    webSocket.sendTXT("{\\"productId\\":\\"P001\\",\\"productName\\":\\"Milk\\",\\"price\\":30,\\"action\\":\\"add\\",\\"quantity\\":1}");
+    delay(250);
+  }
+  lastState = state;
+}`;
+      persistProducts();
+      renderAll();
+      logEvent("Dashboard ready. No hardware connection has been made.", "Demo");
+      updateModelStatus();
+      updateStatus();
+      startCamera();
+    })();
+  </script>
+</body>
+</html>
