@@ -325,9 +325,11 @@
             <div class="camera-view" id="cameraView">
               <video id="cameraVideo" autoplay muted playsinline aria-label="Live trolley camera feed"></video>
               <canvas id="cameraOverlay" aria-hidden="true"></canvas>
-              <div class="camera-placeholder" id="cameraPlaceholder"><span class="camera-icon">⌗</span><strong>Camera permission needed</strong><small>Allow camera access to start automatic trolley monitoring.</small></div>
+              <div class="camera-placeholder" id="cameraPlaceholder"><span class="camera-icon">⌗</span><strong>Camera permission needed</strong><small>Start the camera and allow access to begin trolley monitoring.</small></div>
             </div>
             <div class="camera-controls" style="margin-top:10px">
+              <button class="button primary small" id="startCameraButton" type="button">Start camera</button>
+              <button class="button small" id="stopCameraButton" type="button" disabled>Stop camera</button>
               <span class="ai-status" id="trackingStatus">Camera stopped</span>
             </div>
             <div class="camera-metrics">
@@ -338,8 +340,8 @@
           </div>
           <div>
             <div class="card-head" style="margin-bottom:9px"><div><h2>Tracked objects</h2><div class="subtle">A track is added once; removal requires repeated absence.</div></div></div>
-            <div class="track-list" id="trackList"><div class="empty-state" style="padding:18px">Automatic tracking starts when the camera is ready; a custom product model is required for detections.</div></div>
-            <div class="ai-notice" id="aiNotice">On load, the browser requests camera permission and starts monitoring. Product recognition requires a configured custom-trained product model; unknown detections never change the cart. Remote model endpoints receive camera crops for inference. Camera permission requires localhost or HTTPS.</div>
+            <div class="track-list" id="trackList"><div class="empty-state" style="padding:18px">Start the camera to monitor the trolley. A custom product model is required for detections.</div></div>
+            <div class="ai-notice" id="aiNotice">Start the camera to begin monitoring. Product recognition requires a configured custom-trained product model; unknown detections never change the cart. Remote model endpoints receive trolley-zone image crops for inference. Camera permission requires localhost or HTTPS.</div>
           </div>
         </div>
       </section>
@@ -550,6 +552,8 @@
       let cameraStream = null;
       let ocrWorker = null;
       let cameraRunning = false;
+      let cameraEnabled = false;
+      let cameraGeneration = 0;
       let cameraPermissionDenied = false;
       let cameraFrameBusy = false;
       let cameraFrameTimer = null;
@@ -837,21 +841,29 @@
         status.textContent = text;
         status.className = "ai-status" + (kind ? ` ${kind}` : "");
       }
+      function syncCameraControls() {
+        $("startCameraButton").disabled = cameraEnabled;
+        $("stopCameraButton").disabled = !cameraEnabled;
+      }
       let cameraRetryDelay = 2000;
       function startCamera(isReconnect = false) {
         if (cameraRunning || cameraStream) return;
+        const generation = ++cameraGeneration;
         if (!navigator.mediaDevices?.getUserMedia) {
+          cameraEnabled = false;
           setTrackingStatus("Camera unavailable", "error");
           $("cameraPlaceholder").querySelector("strong").textContent = "Camera unavailable";
           $("cameraPlaceholder").querySelector("small").textContent = "Camera access requires a supported browser and localhost or HTTPS.";
           $("aiNotice").textContent = "This browser cannot access a camera. Open the dashboard in a camera-capable browser using localhost or HTTPS.";
+          syncCameraControls();
           return;
         }
         cameraRunning = true;
+        syncCameraControls();
         setTrackingStatus(isReconnect ? "Reconnecting camera…" : "Requesting camera permission…", "busy");
         navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false })
           .then(async stream => {
-            if (!cameraRunning) { stream.getTracks().forEach(track => track.stop()); return; }
+            if (!cameraEnabled || generation !== cameraGeneration) { stream.getTracks().forEach(track => track.stop()); return; }
             cameraPermissionDenied = false;
             cameraStream = stream;
             cameraRetryDelay = 2000;
@@ -874,6 +886,7 @@
             renderTrackingFrame();
           })
           .catch(error => {
+            if (!cameraEnabled || generation !== cameraGeneration) return;
             cameraRunning = false;
             if (cameraStream) cameraStream.getTracks().forEach(track => track.stop());
             cameraStream = null;
@@ -886,10 +899,39 @@
             $("aiNotice").textContent = `Could not open the camera: ${error.message}. Check camera permission, use a camera-capable browser, and serve this page from localhost or HTTPS.`;
             console.error("Camera access failed:", error);
             if (error.name !== "NotAllowedError" && isReconnect) scheduleCameraReconnect();
+            else cameraEnabled = false;
+            syncCameraControls();
           });
       }
+      function stopCamera() {
+        cameraEnabled = false;
+        cameraGeneration++;
+        clearTimeout(cameraRetryTimer);
+        clearTimeout(cameraFrameTimer);
+        frameRequestController?.abort();
+        cameraRunning = false;
+        if (cameraStream) cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+        $("cameraVideo").srcObject = null;
+        $("cameraPlaceholder").classList.remove("hidden");
+        $("cameraPlaceholder").querySelector("strong").textContent = "Camera stopped";
+        $("cameraPlaceholder").querySelector("small").textContent = "Start the camera to begin trolley monitoring.";
+        tracks = [];
+        $("detectedObjectCount").textContent = "0";
+        $("trackedProductCount").textContent = String(cartTotals().quantity);
+        $("labelStatus").textContent = "Stopped";
+        $("aiEngineStatus").textContent = settings.modelEndpoint ? "Product model configured" : "Custom product model required";
+        $("aiEngineStatus").className = settings.modelEndpoint ? "ai-status" : "ai-status error";
+        clearCameraOverlay();
+        setTrackingStatus("Camera stopped");
+        $("aiNotice").textContent = settings.modelEndpoint
+          ? "Camera is stopped. Start it to monitor the trolley using the configured product model."
+          : "Camera is stopped. Start it to monitor the trolley; configure a custom-trained product model in Admin to enable product detections.";
+        renderTracks();
+        syncCameraControls();
+      }
       function handleCameraDisconnect() {
-        if (!cameraRunning) return;
+        if (!cameraEnabled || !cameraRunning) return;
         cameraRunning = false;
         frameRequestController?.abort();
         clearTimeout(cameraFrameTimer);
@@ -1191,6 +1233,7 @@
           $("trackedProductCount").textContent = String(cartTotals().quantity);
           $("labelStatus").textContent = tracks.some(track => track.status === "scanning") ? "Scanning" : tracks.some(track => track.status === "recognized") ? "Matched" : tracks.some(track => track.status === "unknown") ? "Needs match" : "Waiting";
         } catch (error) {
+          if (!cameraRunning || error.name === "AbortError") return;
           inferenceErrors++;
           $("aiEngineStatus").textContent = inferenceErrors > 1 ? "Product model unavailable" : "Checking product model";
           $("aiEngineStatus").className = "ai-status error";
@@ -1205,7 +1248,10 @@
         const list = $("trackList");
         const visibleTracks = tracks.filter(track => track.missed < 8);
         if (!visibleTracks.length) {
-          list.innerHTML = `<div class="empty-state" style="padding:18px">${cameraRunning ? settings.modelEndpoint ? "No products detected inside the trolley zone." : "Camera is monitoring; configure a custom product model in Admin to enable detections." : "Camera is waiting for permission."}</div>`;
+          const emptyMessage = cameraRunning
+            ? settings.modelEndpoint ? "No products detected inside the trolley zone." : "Camera is monitoring; configure a custom product model in Admin to enable detections."
+            : cameraEnabled ? "Camera is reconnecting or waiting for permission." : "Camera is stopped. Start the camera to monitor the trolley.";
+          list.innerHTML = `<div class="empty-state" style="padding:18px">${emptyMessage}</div>`;
           return;
         }
         const selectedProducts = new Map([...list.querySelectorAll("[data-track-product]")].map(select => [select.dataset.trackProduct, select.value]));
@@ -1443,6 +1489,12 @@
         if (cameraRunning) { clearTimeout(cameraFrameTimer); inferenceErrors = 0; renderTrackingFrame(); }
         toast("Settings saved. Model key is kept in memory only.");
       });
+      $("startCameraButton").addEventListener("click", () => {
+        cameraEnabled = true;
+        inferenceErrors = 0;
+        startCamera();
+      });
+      $("stopCameraButton").addEventListener("click", stopCamera);
       $("inventoryTable").addEventListener("change", event => {
         const input = event.target.closest("[data-stock-id]");
         if (!input) return;
@@ -1536,7 +1588,7 @@
         if (socket && socket.readyState < WebSocket.CLOSING) socket.close();
       });
       document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible" && !cameraPermissionDenied && !cameraStream && !cameraRetryTimer && navigator.mediaDevices?.getUserMedia) startCamera(true);
+        if (document.visibilityState === "visible" && cameraEnabled && !cameraPermissionDenied && !cameraStream && !cameraRetryTimer && navigator.mediaDevices?.getUserMedia) startCamera(true);
       });
       if (navigator.mediaDevices?.addEventListener) navigator.mediaDevices.addEventListener("devicechange", () => {
         if (cameraRunning && (!cameraStream || !cameraStream.active)) handleCameraDisconnect();
@@ -1619,7 +1671,7 @@ void loop() {
       logEvent("Dashboard ready. No hardware connection has been made.", "Demo");
       updateModelStatus();
       updateStatus();
-      startCamera();
+      syncCameraControls();
     })();
   </script>
 </body>
